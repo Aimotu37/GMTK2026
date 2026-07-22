@@ -28,7 +28,10 @@ public class EventInfo : IEventInfo
 
 class GameEvents
 {
-
+    public const string NewGameStart = "OnNewGameStart";
+    public const string GamePause = "OnGamePause";
+    public const string GameStateChange = "OnStateChange";
+    public const string GameSceneSwitch = "OnSceneSwitch";
 }
 
 /// <summary>

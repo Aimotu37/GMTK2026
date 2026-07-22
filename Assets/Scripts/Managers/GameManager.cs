@@ -14,7 +14,7 @@ public enum GameState
 public class GameManager : SingletonMono<GameManager>
 {
     private GameState _currentState = GameState.MainMenu;
-    public GameState CurrentState;
+    public GameState CurrentState => _currentState;
 
     //初始化变量
     private bool _isInitialized;
@@ -43,21 +43,20 @@ public class GameManager : SingletonMono<GameManager>
         }
     }
 
-    public void SwitchGameState(GameState tragetState)
+    public void SwitchGameState(GameState targetState)
     {
-        if (_currentState == tragetState) return;
+        if (_currentState == targetState) return;
+        _currentState = targetState;
 
-        GameState oldState = _currentState;
-        _currentState = tragetState;
-
-        switch (tragetState)
+        switch (targetState)
         {
             case GameState.MainMenu:
                 break;
             case GameState.Playing:
-                Time.timeScale = 0f;
+                Time.timeScale = 1f;
                 break;
             case GameState.Pause:
+                Time.timeScale = 0f;
                 break;
             case GameState.GameOver:
                 break;
@@ -65,29 +64,30 @@ public class GameManager : SingletonMono<GameManager>
                 break;
         }
 
-        // 处理输入锁（防止暂停时角色乱动）
-        //if (InputManager.Instance != null)
-        //InputManager.Instance.SetInputEnabled(newState != GameState.Pause && newState != GameState.GameOver);
-
-        // 触发事件通知其他脚本（UIManager会监听这个刷新UI）
-        //EventManager.Instance?.EventTrigger("OnGameStateChanged", newState);
-
+        if (InputManager.Instance != null)
+        {
+            bool enableInput = targetState == GameState.Playing;
+            InputManager.Instance.SetInputEnabled(enableInput);
+        }
     }
 
     // 5. 流程控制快捷方法（外部直接调用，不用记复杂API）
     public void StartNewGame()
     {
-
-        SwitchGameState(GameState.Playing);
         ScenesManager.Instance?.LoadSceneAsync("Scene_Level_1", null);
+        SwitchGameState(GameState.Playing);
     }
 
     public void PauseGame()
     {
         if (_currentState == GameState.Playing)
+        {
             SwitchGameState(GameState.Pause);
+        }
         else if (_currentState == GameState.Pause)
+        {
             SwitchGameState(GameState.Playing);
+        }
     }
 
     public void GameOver()
@@ -98,7 +98,7 @@ public class GameManager : SingletonMono<GameManager>
 
     public void BackToMenu()
     {
-        Time.timeScale = 1f; // 确保恢复
+        Time.timeScale = 1f; 
         SwitchGameState(GameState.MainMenu);
         ScenesManager.Instance?.LoadSceneAsync("Scene_Main", null);
     }

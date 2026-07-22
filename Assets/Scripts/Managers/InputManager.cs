@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class InputManager : SingletonMono<InputManager>
 {
+    private bool _isInputEnabled;
+
     private bool _isInitialized;
     public bool IsInitialized => _isInitialized;
 
@@ -26,7 +28,43 @@ public class InputManager : SingletonMono<InputManager>
         else
         {
             _isInitialized = true;
+            SetInputEnabled(false);
             Debug.Log(this.name + " Initialization Successful.");
         }
+    }
+
+    public void SetInputEnabled(bool enabled)
+    {
+        _isInputEnabled = enabled;
+    }
+
+    public bool GetKeyDown(KeyCode key)
+    {
+        return _isInputEnabled && Input.GetKeyDown(key);
+    }
+
+    public bool GetKey(KeyCode key)
+    {
+        return _isInputEnabled && Input.GetKey(key);
+    }
+
+    public bool GetKeyUp(KeyCode key)
+    {
+        return _isInputEnabled && Input.GetKeyUp(key);
+    }
+
+    public float GetAxis(string axisName)
+    {
+        return _isInputEnabled ? Input.GetAxis(axisName) : 0f;
+    }
+
+    public float GetAxisRaw(string axisName)
+    {
+        return _isInputEnabled ? Input.GetAxisRaw(axisName) : 0f;
+    }
+
+    public Vector2 GetMousePosition()
+    {
+        return _isInputEnabled ? Input.mousePosition : Vector2.zero;
     }
 }

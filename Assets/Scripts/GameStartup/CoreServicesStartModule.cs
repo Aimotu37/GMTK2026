@@ -36,7 +36,13 @@ public sealed class CoreServicesStartModule : IGameStartModule
         {
             throw new System.InvalidOperationException("ScenesManager initialization did not complete.");
         }
-        //_ = PublicMonoMgr.Instance;
+
+        yield return SaveManager.Instance.InitializeAsync();
+        if (!SaveManager.Instance.IsInitialized)
+        {
+            throw new System.InvalidOperationException("SaveManager initialization did not complete.");
+        }
+
         //_ = SaveManager.Instance;
         IsInitialized = true;
     }
