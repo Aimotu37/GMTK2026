@@ -1,0 +1,105 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+
+public enum GameState
+{
+    MainMenu,
+    Playing,
+    Pause,
+    GameOver,
+    GameVictory
+}
+public class GameManager : SingletonMono<GameManager>
+{
+    private GameState _currentState = GameState.MainMenu;
+    public GameState CurrentState;
+
+    //初始化变量
+    private bool _isInitialized;
+    public bool IsInitialized => _isInitialized;
+
+    private bool _initFailed;
+
+    public IEnumerator InitializeAsync()
+    {
+        if (_isInitialized)
+        {
+            yield break;
+        }
+
+        _initFailed = false;
+
+        if (_initFailed)
+        {
+            _isInitialized = false;
+            Debug.LogError(this.name + " Initialization Failed.");
+        }
+        else
+        {
+            _isInitialized = true;
+            Debug.Log(this.name + " Initialization Successful.");
+        }
+    }
+
+    public void SwitchGameState(GameState tragetState)
+    {
+        if (_currentState == tragetState) return;
+
+        GameState oldState = _currentState;
+        _currentState = tragetState;
+
+        switch (tragetState)
+        {
+            case GameState.MainMenu:
+                break;
+            case GameState.Playing:
+                Time.timeScale = 0f;
+                break;
+            case GameState.Pause:
+                break;
+            case GameState.GameOver:
+                break;
+            case GameState.GameVictory:
+                break;
+        }
+
+        // 处理输入锁（防止暂停时角色乱动）
+        //if (InputManager.Instance != null)
+        //InputManager.Instance.SetInputEnabled(newState != GameState.Pause && newState != GameState.GameOver);
+
+        // 触发事件通知其他脚本（UIManager会监听这个刷新UI）
+        //EventManager.Instance?.EventTrigger("OnGameStateChanged", newState);
+
+    }
+
+    // 5. 流程控制快捷方法（外部直接调用，不用记复杂API）
+    public void StartNewGame()
+    {
+
+        SwitchGameState(GameState.Playing);
+        ScenesManager.Instance?.LoadSceneAsync("Scene_Level_1", null);
+    }
+
+    public void PauseGame()
+    {
+        if (_currentState == GameState.Playing)
+            SwitchGameState(GameState.Pause);
+        else if (_currentState == GameState.Pause)
+            SwitchGameState(GameState.Playing);
+    }
+
+    public void GameOver()
+    {
+        SwitchGameState(GameState.GameOver);
+        // 延迟2秒后显示结算UI（或者直接通过事件驱动）
+    }
+
+    public void BackToMenu()
+    {
+        Time.timeScale = 1f; // 确保恢复
+        SwitchGameState(GameState.MainMenu);
+        ScenesManager.Instance?.LoadSceneAsync("Scene_Main", null);
+    }
+}

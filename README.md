@@ -1,8 +1,12 @@
 # GMTK2026
-GMTK Game Jam entry | Unity 2022.3.62f3.
+
+GMTK Game Jam entry | Unity 2022.3.62f3c1.
+
 # 游戏名称
 
 ## 项目简介
+
+GMTK Game Jam 2026参赛项目。
 
 ## GMTK主题
 
@@ -14,7 +18,17 @@ GMTK Game Jam entry | Unity 2022.3.62f3.
 
 ## 项目结构
 
+Assets
+├── Art
+├── Audio
+├── Prefabs
+├── Scenes
+└── Scripts
+
 ## 开发流程
+
+main: 稳定版本
+develop: 开发版本
 
 ## 当前进度
 
