@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System;
 
 
@@ -8,19 +8,19 @@ public class CounterManager : MonoBehaviour
     public static CounterManager Instance { get; private set; }
 
 
-    [Header("³õÊ¼µ÷²é´ÎÊı")]
+    [Header("åˆå§‹è°ƒæŸ¥æ¬¡æ•°")]
     [SerializeField]
     private int initialCount = 10;
 
 
 
-    // µ±Ç°Ê£Óà´ÎÊı
+    // å½“å‰å‰©ä½™æ¬¡æ•°
     private int currentCount;
 
 
 
     /// <summary>
-    /// »ñÈ¡µ±Ç°µ÷²é´ÎÊı
+    /// è·å–å½“å‰è°ƒæŸ¥æ¬¡æ•°
     /// </summary>
     public int CurrentCount
     {
@@ -33,25 +33,25 @@ public class CounterManager : MonoBehaviour
 
 
     /*
-     * ´ÎÊı±ä»¯ÊÂ¼ş
+     * æ¬¡æ•°å˜åŒ–äº‹ä»¶
      *
-     * ²ÎÊı£º
-     * µ±Ç°Ê£Óà´ÎÊı
+     * å‚æ•°ï¼š
+     * å½“å‰å‰©ä½™æ¬¡æ•°
      *
-     * ÓÃÍ¾£º
-     * UIË¢ĞÂ
-     * ½×¶ÎÊÂ¼ş¼ì²â
+     * ç”¨é€”ï¼š
+     * UIåˆ·æ–°
+     * é˜¶æ®µäº‹ä»¶æ£€æµ‹
      */
     public event Action<int> OnCountChanged;
 
 
 
     /*
-     * ´ÎÊı¹éÁãÊÂ¼ş
+     * æ¬¡æ•°å½’é›¶äº‹ä»¶
      *
-     * ÓÃÍ¾£º
-     * Íæ¼ÒËÀÍö
-     * ÓÎÏ·Ê§°Ü
+     * ç”¨é€”ï¼š
+     * ç©å®¶æ­»äº¡
+     * æ¸¸æˆå¤±è´¥
      */
     public event Action OnCountZero;
 
@@ -88,10 +88,10 @@ public class CounterManager : MonoBehaviour
 
 
     /// <summary>
-    /// ÏûºÄµ÷²é´ÎÊı
+    /// æ¶ˆè€—è°ƒæŸ¥æ¬¡æ•°
     ///
-    /// Ê¾Àı£º
-    /// µ÷²éÒ»¸öÎïÆ·ÏûºÄ1´Î
+    /// ç¤ºä¾‹ï¼š
+    /// è°ƒæŸ¥ä¸€ä¸ªç‰©å“æ¶ˆè€—1æ¬¡
     ///
     /// ConsumeCount(1)
     /// </summary>
@@ -101,7 +101,7 @@ public class CounterManager : MonoBehaviour
         if (amount <= 0)
         {
             Debug.LogWarning(
-                "ConsumeCount²ÎÊı±ØĞë´óÓÚ0"
+                "ConsumeCountå‚æ•°å¿…é¡»å¤§äº0"
             );
 
             return;
@@ -133,10 +133,10 @@ public class CounterManager : MonoBehaviour
 
 
     /// <summary>
-    /// Ôö¼Óµ÷²é´ÎÊı
+    /// å¢åŠ è°ƒæŸ¥æ¬¡æ•°
     ///
-    /// Ê¾Àı£º
-    /// µÀ¾ß»Ö¸´´ÎÊı
+    /// ç¤ºä¾‹ï¼š
+    /// é“å…·æ¢å¤æ¬¡æ•°
     ///
     /// AddCount(2)
     /// </summary>
@@ -146,7 +146,7 @@ public class CounterManager : MonoBehaviour
         if (amount <= 0)
         {
             Debug.LogWarning(
-                "AddCount²ÎÊı±ØĞë´óÓÚ0"
+                "AddCountå‚æ•°å¿…é¡»å¤§äº0"
             );
 
             return;
@@ -167,11 +167,11 @@ public class CounterManager : MonoBehaviour
 
 
     /// <summary>
-    /// Ç¿ÖÆÉèÖÃµ±Ç°´ÎÊı
+    /// å¼ºåˆ¶è®¾ç½®å½“å‰æ¬¡æ•°
     ///
-    /// ÓÃÍ¾£º
-    /// ²âÊÔ
-    /// ÌØÊâ¾çÇé
+    /// ç”¨é€”ï¼š
+    /// æµ‹è¯•
+    /// ç‰¹æ®Šå‰§æƒ…
     /// </summary>
     public void SetCount(int value)
     {
@@ -193,7 +193,7 @@ public class CounterManager : MonoBehaviour
 
 
     /// <summary>
-    /// »ñÈ¡µ±Ç°´ÎÊıÊÇ·ñºÄ¾¡
+    /// è·å–å½“å‰æ¬¡æ•°æ˜¯å¦è€—å°½
     /// </summary>
     public bool IsEmpty()
     {
