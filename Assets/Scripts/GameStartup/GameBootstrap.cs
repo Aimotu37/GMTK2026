@@ -78,7 +78,7 @@ public sealed class GameBootstrap : MonoBehaviour
         //EventCenterMgr.Instance.EventRegister<string>(GameEvents.SceneLoaded, HandleSceneLoaded);
         _loadingView.ShowSceneLoading(Scenes.MainMenuSceneName);
         HandleSceneLoaded(Scenes.MainMenuSceneName);
-        ScenesManager.Instance.LoadSceneAsync(Scenes.MainMenuSceneName);
+        ScenesManager.Instance.LoadSceneAsync(Scenes.Interaction_Test_SceneName);
         //gameManager.LoadMainMenu(_mainMenuSceneName);
     }
 

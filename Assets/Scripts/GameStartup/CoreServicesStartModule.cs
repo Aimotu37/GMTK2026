@@ -43,7 +43,6 @@ public sealed class CoreServicesStartModule : IGameStartModule
             throw new System.InvalidOperationException("SaveManager initialization did not complete.");
         }
 
-        //_ = SaveManager.Instance;
         IsInitialized = true;
     }
 }

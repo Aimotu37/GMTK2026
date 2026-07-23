@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 
 public enum GameState
@@ -15,6 +16,9 @@ public class GameManager : SingletonMono<GameManager>
 {
     private GameState _currentState = GameState.MainMenu;
     public GameState CurrentState => _currentState;
+
+    //游戏变量
+    int currentWords = 4;
 
     //初始化变量
     private bool _isInitialized;
@@ -71,7 +75,6 @@ public class GameManager : SingletonMono<GameManager>
         }
     }
 
-    // 5. 流程控制快捷方法（外部直接调用，不用记复杂API）
     public void StartNewGame()
     {
         ScenesManager.Instance?.LoadSceneAsync("Scene_Level_1", null);
@@ -93,13 +96,42 @@ public class GameManager : SingletonMono<GameManager>
     public void GameOver()
     {
         SwitchGameState(GameState.GameOver);
-        // 延迟2秒后显示结算UI（或者直接通过事件驱动）
+        //1、局内交互锁定
+        EventManager.Instance.EventTrigger(GameEvents.GameOver);
     }
 
     public void BackToMenu()
     {
-        Time.timeScale = 1f; 
+        Time.timeScale = 1f;
         SwitchGameState(GameState.MainMenu);
         ScenesManager.Instance?.LoadSceneAsync("Scene_Main", null);
+    }
+
+    public bool CheckWord(string itemID)
+    {
+        if (currentWords <= 0)
+        {
+            return false;
+        }
+
+        currentWords--;
+        print(currentWords);
+        //UpdateWordUI();
+
+
+        //string clue = WordMatcher.GetClueByItemID(itemID);
+        string clue = "this is test";
+        ShowClueAnimation(clue);
+        return true;
+    }
+
+    private void ShowClueAnimation(string clue)
+    {
+        InputManager.Instance.SetInputEnabled(false);
+
+        InteractionController.Instance.typewriter.StartTyping(clue, () =>
+        {
+            InputManager.Instance.SetInputEnabled(true);
+        });
     }
 }

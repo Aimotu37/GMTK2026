@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class InputManager : SingletonMono<InputManager>
 {
-    private bool _isInputEnabled;
+    private bool _isInputEnabled = true;
+    private bool _isGameInputEnable;
 
     private bool _isInitialized;
     public bool IsInitialized => _isInitialized;
@@ -31,6 +32,16 @@ public class InputManager : SingletonMono<InputManager>
             SetInputEnabled(false);
             Debug.Log(this.name + " Initialization Successful.");
         }
+    }
+
+    private void OnEnable()
+    {
+
+    }
+
+    private void OnDisable()
+    {
+
     }
 
     public void SetInputEnabled(bool enabled)
@@ -66,5 +77,20 @@ public class InputManager : SingletonMono<InputManager>
     public Vector2 GetMousePosition()
     {
         return _isInputEnabled ? Input.mousePosition : Vector2.zero;
+    }
+
+    public bool GetMouseDown(int button)
+    {
+        return _isInputEnabled ? Input.GetMouseButtonDown(button) : false;
+    }
+
+    public bool GetMouse(int button)
+    {
+        return _isInputEnabled ? Input.GetMouseButton(button) : false;
+    }
+
+    public bool GetMouseUp(int button)
+    {
+        return _isInputEnabled ? Input.GetMouseButtonUp(button) : false;
     }
 }

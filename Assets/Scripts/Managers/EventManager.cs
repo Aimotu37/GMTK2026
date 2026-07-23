@@ -28,10 +28,14 @@ public class EventInfo : IEventInfo
 
 class GameEvents
 {
+    //游戏外事件
     public const string NewGameStart = "OnNewGameStart";
     public const string GamePause = "OnGamePause";
+    public const string GameOver = "OnGameOver";
     public const string GameStateChange = "OnStateChange";
     public const string GameSceneSwitch = "OnSceneSwitch";
+    //游戏内事件
+    public const string DropItemOnZone = "OnItemOnZone";
 }
 
 /// <summary>

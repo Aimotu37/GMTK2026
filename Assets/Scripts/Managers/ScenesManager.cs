@@ -9,7 +9,8 @@ class Scenes
 {
     public const string PersistentSceneName = "Scene_Persistent";
     public const string MainMenuSceneName = "Scene_Main";
-    public const string Level_1_SceneName="Scene_Level_1";
+    public const string Level_1_SceneName = "Scene_Level_1";
+    public const string Interaction_Test_SceneName = "Scene_Interaction_Test";
 }
 
 /// <summary>
