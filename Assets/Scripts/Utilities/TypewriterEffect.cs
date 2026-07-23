@@ -103,7 +103,8 @@ public class TypewriterEffect : MonoBehaviour
             textComponent.text += c;
             currentIndex++;
 
-            // TODO:播放打字音效
+            // TODO:必要：播放打字音效
+            AudioManager.Instance.StartPlaySound("testSound", false);
 
             float waitTime = normalSpeed;
             if (c == '。' || c == '！' || c == '？' || c == '.' || c == '!' || c == '?' || c == '，' || c == ',')

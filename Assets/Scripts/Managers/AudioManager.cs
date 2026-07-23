@@ -156,7 +156,7 @@ public class AudioManager : SingletonMono<AudioManager>
                 sfxSource.Play();
                 sfxSourceList.Add(sfxSource);
 
-                audioResources.Add(name, clip);
+                audioResources[name] = clip;
 
                 // 如果需要回调函数则执行回调函数
                 callback?.Invoke(sfxSource);

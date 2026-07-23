@@ -71,14 +71,17 @@ public sealed class GameBootstrap : MonoBehaviour
             yield break;
         }
 
-        GameManager gameManager = GameManager.Instance;
-        //gameManager.MarkInitialized();
+        yield return GameManager.Instance.InitializeAsync();
+        if (!GameManager.Instance.IsInitialized)
+        {
+            throw new System.InvalidOperationException("GameManager initialization did not complete.");
+        }
         State = BootstrapState.Ready;
         _waitingForMainMenu = true;
         //EventCenterMgr.Instance.EventRegister<string>(GameEvents.SceneLoaded, HandleSceneLoaded);
         _loadingView.ShowSceneLoading(Scenes.MainMenuSceneName);
         HandleSceneLoaded(Scenes.MainMenuSceneName);
-        ScenesManager.Instance.LoadSceneAsync(Scenes.Interaction_Test_SceneName);
+        ScenesManager.Instance.LoadSceneAsync(Scenes.MainMenuSceneName);
         //gameManager.LoadMainMenu(_mainMenuSceneName);
     }
 

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.SearchService;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -77,7 +78,7 @@ public class GameManager : SingletonMono<GameManager>
 
     public void StartNewGame()
     {
-        ScenesManager.Instance?.LoadSceneAsync("Scene_Level_1", null);
+        ScenesManager.Instance?.LoadSceneAsync(Scenes.Interaction_Test_SceneName, null);
         SwitchGameState(GameState.Playing);
     }
 
@@ -100,11 +101,20 @@ public class GameManager : SingletonMono<GameManager>
         EventManager.Instance.EventTrigger(GameEvents.GameOver);
     }
 
+    public void QuitGame()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
     public void BackToMenu()
     {
         Time.timeScale = 1f;
         SwitchGameState(GameState.MainMenu);
-        ScenesManager.Instance?.LoadSceneAsync("Scene_Main", null);
+        ScenesManager.Instance?.LoadSceneAsync(Scenes.MainMenuSceneName, null);
     }
 
     public bool CheckWord(string itemID)
