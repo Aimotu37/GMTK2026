@@ -17,8 +17,18 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: b3841193a8d97ae45a85041e0944c542
   m_SerializeEntries:
+  - m_GUID: 005002635ea4a4c4fa72fa65351a273c
+    m_Address: ui/demon_panel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2efdb743ebd726a40b6fb9f009b61e3d
     m_Address: config/demon_speaks
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3271c4ddb927d9e4a8ea1fb1d3c950d2
+    m_Address: ui/case_board_panel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

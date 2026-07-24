@@ -27,9 +27,13 @@ public class GameManager : SingletonMono<GameManager>
     private DemonSpeakDataSO _demonSpeak;
     private DebuffDataSO _debuff;
 
+    private Dictionary<int, ItemData> _items = new Dictionary<int, ItemData>();
+    private Dictionary<int, OptionData> _options = new Dictionary<int, OptionData>();
+
     private List<int> currentCaseOptionIds = new List<int>() { 1001, 1002, 1003 };
     private List<int> currentCaseItemIds = new List<int>();
     private int _currentWords = DEFAULT_WORDS;
+    private int _currentCaseIndex;
     private int _currentCaseId;
     private int _iscurrentCasePassed;
     private int _currentDebuffId;
@@ -87,6 +91,7 @@ public class GameManager : SingletonMono<GameManager>
                 Time.timeScale = 0f;
                 break;
             case GameState.GameOver:
+                Time.timeScale = 0f;
                 break;
             case GameState.GameVictory:
                 break;
@@ -112,6 +117,8 @@ public class GameManager : SingletonMono<GameManager>
             interaction = InteractionController.Instance;
             interaction.SetSpeakerZone(speakerZone);
             flow = FlowController.Instance;
+            UIManager.Instance.ShowPanel<DemonPanel>("demon_panel");
+            UIManager.Instance.ShowPanel<CaseBoardPanel>("case_board_panel");
             // 捕获场景初始快照，便于后续不切场景复原
             CaptureSceneSnapshot();
         });
@@ -168,13 +175,15 @@ public class GameManager : SingletonMono<GameManager>
 
         // 恢复单局变量并启用输入
         _currentWords = DEFAULT_WORDS;
+        EventManager.Instance.EventTrigger<int>(GameEvents.CountChanged, _currentWords);
+        UIManager.Instance.HidePanel("case_board_panel");
+        UIManager.Instance.ShowPanel<CaseBoardPanel>("case_board_panel");
         SwitchGameState(GameState.Playing);
         if (InputManager.Instance != null) InputManager.Instance.SetInputEnabled(true);
     }
 
     public void NextCase()
     {
-        _currentCaseId += 1;
         PrepareCaseData(_currentCaseId);
         ScenesManager.Instance?.LoadSceneAsync(Scenes.Interaction_Test_1_SceneName, () =>
         {
@@ -230,7 +239,15 @@ public class GameManager : SingletonMono<GameManager>
         _currentCaseId = caseId;
         _currentCaseData = DataManager.Instance.GetCase(caseId);
         _currentCaseItems = DataManager.Instance.GetItems(caseId);
+        foreach (var item in _currentCaseItems.itemDatas)
+        {
+            _items.Add(item.itemID, item);
+        }
         _currentCaseOtions = DataManager.Instance.GetOptions(caseId);
+        foreach (var option in _currentCaseOtions.optionDatas)
+        {
+            _options.Add(option.optionID, option);
+        }
         _demonSpeak = DataManager.Instance.GetDemonSpeak();
         _debuff = DataManager.Instance.GetDebuffData();
     }
@@ -258,25 +275,30 @@ public class GameManager : SingletonMono<GameManager>
         _sceneSnapshots[active.name] = root;
     }
 
-    public void CheckWord(string itemId)
+    public void CheckWord(int itemId)
     {
         _currentWords--;
+        EventManager.Instance.EventTrigger<int>(GameEvents.CountChanged, _currentWords);
         if (_currentWords <= 0)
         {
             flow.FlowStateChange(GameFlowState.Death);
         }
-        else if (_currentWords == 1)
-        {
-            CheckWin("1");
-        }
         else
         {
-            flow.ShowCluePopup(itemId);
+            string clue = $"已提取{_items[itemId].itemName}留声：{_items[itemId].clueText}";
+            EventManager.Instance.EventTrigger(GameEvents.DropItemOnZone, _items[itemId]);
+            flow.ShowCluePopup(clue);
         }
     }
 
     public void CheckWin(string caseId)
     {
         flow.ShowSuccess(caseId);
+    }
+
+    public void DemonSpeak()
+    {
+        int index = Random.Range(0, 3);
+        EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, _demonSpeak.demonSpeakDatas[index].defaultSpeak);
     }
 }

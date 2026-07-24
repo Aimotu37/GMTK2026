@@ -23,8 +23,11 @@ public class FlowController : SingletonMono<FlowController>
 
     //流程运行变量
     private float clueDuration = 1.5f;
+    private float demonSpeakInterval = 10.0f;
     private string _pendingClueText;
     private string _currentCase;
+
+    public Item currentDragItem;
 
     private void Start()
     {
@@ -117,6 +120,8 @@ public class FlowController : SingletonMono<FlowController>
 
     private IEnumerator HandleExplore()
     {
+        GameManager.Instance.DemonSpeak();
+        StartCoroutine(DemonSpeakPeriodically());
         yield break;
     }
 
@@ -180,6 +185,7 @@ public class FlowController : SingletonMono<FlowController>
     private IEnumerator HandleDeath()
     {
         yield return new WaitForSeconds(0.5f);
+        GameManager.Instance.GameOver();
         UIManager.Instance.ShowPanel<DeathPanel>("death_panel", E_UILayer.TopLayer);
         yield break;
     }
@@ -199,6 +205,19 @@ public class FlowController : SingletonMono<FlowController>
         {
             InputManager.Instance.SetInputEnabled(true);
         });
+    }
+
+    private IEnumerator DemonSpeakPeriodically()
+    {
+        float elapsed = demonSpeakInterval;
+        while (elapsed > 0f)
+        {
+            elapsed -= Time.deltaTime;
+            float t = Mathf.SmoothStep(0, 1, elapsed / demonSpeakInterval);
+            yield return null;
+        }
+        GameManager.Instance.DemonSpeak();
+        StartCoroutine(DemonSpeakPeriodically());
     }
 
 }

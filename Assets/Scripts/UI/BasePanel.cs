@@ -92,7 +92,6 @@ public class BasePanel : MonoBehaviour
             if (!_components.TryGetValue(componentGameObjectName, out List<UIBehaviour> cachedComponents))
             {
                 cachedComponents = new List<UIBehaviour>();
-                print(componentGameObjectName + " " + component);
                 _components.Add(componentGameObjectName, cachedComponents);
             }
 

@@ -5,7 +5,7 @@ using UnityEngine;
 public interface IInteractive
 {
     // 唯一标识
-    string ItemID { get; }
+    int ItemID { get; }
 
     // 交互状态
     bool IsInteractable { get; }

@@ -22,14 +22,6 @@ public class TypewriterEffect : MonoBehaviour
     private Coroutine typingCoroutine;
     private Action onCompleteCallback;
 
-    private void Awake()
-    {
-        if (textComponent == null)
-            textComponent = GetComponent<TextMeshProUGUI>();
-        if (textComponent != null)
-            textComponent.text = string.Empty;
-    }
-
     /// <summary>
     /// 外部调用：开始打印一段文字
     /// </summary>
@@ -82,13 +74,18 @@ public class TypewriterEffect : MonoBehaviour
         }
     }
 
+    public void SetTextMesh(TextMeshProUGUI textMesh)
+    {
+        textComponent = textMesh;
+    }
+
     private IEnumerator TypewriterRoutine()
     {
         isTyping = true;
 
         if (lockInputWhileTyping && InteractionController.Instance != null)
         {
-            InputManager.Instance.SetInputEnabled(false);
+            //InputManager.Instance.SetInputEnabled(false);
             Debug.Log("【打字机】输入已锁定，玩家无法拖拽");
         }
 
@@ -121,7 +118,7 @@ public class TypewriterEffect : MonoBehaviour
 
         if (lockInputWhileTyping && InteractionController.Instance != null)
         {
-            InputManager.Instance.SetInputEnabled(true);
+            //InputManager.Instance.SetInputEnabled(true);
             Debug.Log("【打字机】输入已解锁，玩家可以继续拖拽");
         }
 

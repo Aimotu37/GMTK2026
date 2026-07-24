@@ -4,8 +4,8 @@ using System.Collections;
 public class Item : MonoBehaviour, IInteractive
 {
     [Header("物品信息数据")]
-    [SerializeField] private string itemID;
-    public string ItemID => itemID;
+    [SerializeField] private int itemID;
+    public int ItemID => itemID;
 
     [Header("交互手感参数")]
     [SerializeField] private float dragScale = 1.1f;
