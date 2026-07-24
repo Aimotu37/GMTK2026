@@ -21,15 +21,17 @@ public class GameManager : SingletonMono<GameManager>
     private const int DEFAULT_WORDS = 4;
 
     //单局游戏变量
-    private List<int> pendingCaseIds = new List<int>();
-    private List<int> completedCaseIds = new List<int>();
-    private List<int> demonSpeakIds = new List<int>();
-    private List<int> debuffIds = new List<int>();
+    private CaseDataSO _currentCaseData;
+    private ItemDataSO _currentCaseItems;
+    private OptionDataSO _currentCaseOtions;
+    private DemonSpeakDataSO _demonSpeak;
+    private DebuffDataSO _debuff;
 
-    private List<int> currentCaseOptionIds = new List<int>();
+    private List<int> currentCaseOptionIds = new List<int>() { 1001, 1002, 1003 };
     private List<int> currentCaseItemIds = new List<int>();
     private int _currentWords = DEFAULT_WORDS;
     private int _currentCaseId;
+    private int _iscurrentCasePassed;
     private int _currentDebuffId;
 
     private bool _isCorrect;
@@ -100,7 +102,7 @@ public class GameManager : SingletonMono<GameManager>
     //游戏行为
     public void StartNewGame()
     {
-        _currentCaseId = 1;
+        _currentCaseId = 1001;
         _currentWords = DEFAULT_WORDS;
         PrepareCaseData(_currentCaseId);
         ScenesManager.Instance?.LoadSceneAsync(Scenes.Interaction_Test_SceneName, () =>
@@ -226,7 +228,11 @@ public class GameManager : SingletonMono<GameManager>
     public void PrepareCaseData(int caseId)
     {
         _currentCaseId = caseId;
-        //TODO：必须，加载当前案件配置
+        _currentCaseData = DataManager.Instance.GetCase(caseId);
+        _currentCaseItems = DataManager.Instance.GetItems(caseId);
+        _currentCaseOtions = DataManager.Instance.GetOptions(caseId);
+        _demonSpeak = DataManager.Instance.GetDemonSpeak();
+        _debuff = DataManager.Instance.GetDebuffData();
     }
 
     // 在活动场景中捕获需要恢复的对象的克隆快照（禁用），保存到 DontDestroyOnLoad 下

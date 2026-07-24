@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4eb6baa21351a17478f68efb9ce5ddc1, type: 3}
+  m_Name: Options1002
+  m_EditorClassIdentifier: 
+  caseID: 1002
+  optionDatas:
+  - optionID: 501
+    caseID: 1002
+    optionText: "\u996E\u9E29\u6B62\u6E34"
+    isCorrect: 0
+  - optionID: 502
+    caseID: 1002
+    optionText: "\u803D\u9152\u55DC\u996E"
+    isCorrect: 0
+  - optionID: 503
+    caseID: 1002
+    optionText: "\u826F\u836F\u82E6\u53E3"
+    isCorrect: 1

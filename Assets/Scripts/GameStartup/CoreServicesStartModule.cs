@@ -13,6 +13,12 @@ public sealed class CoreServicesStartModule : IGameStartModule
             yield break;
         }
 
+        yield return ResourcesManager.Instance.InitializeAsync();
+        if (!ResourcesManager.Instance.IsInitialized)
+        {
+            throw new System.InvalidOperationException("ResourcesManager initialization did not complete.");
+        }
+
         yield return DataManager.Instance.InitializeAsync();
         if (!DataManager.Instance.IsInitialized)
         {
@@ -23,12 +29,6 @@ public sealed class CoreServicesStartModule : IGameStartModule
         if (!EventManager.Instance.IsInitialized)
         {
             throw new System.InvalidOperationException("EventManager initialization did not complete.");
-        }
-
-        yield return ResourcesManager.Instance.InitializeAsync();
-        if (!ResourcesManager.Instance.IsInitialized)
-        {
-            throw new System.InvalidOperationException("ResourcesManager initialization did not complete.");
         }
 
         yield return ScenesManager.Instance.InitializeAsync();
