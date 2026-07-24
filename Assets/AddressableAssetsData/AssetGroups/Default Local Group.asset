@@ -16,7 +16,12 @@ MonoBehaviour:
   m_Data:
     m_SerializedData: []
   m_GUID: 729c9257d80be1a4199c5d14f49eb889
-  m_SerializeEntries: []
+  m_SerializeEntries:
+  - m_GUID: e90ba9f5aa8d097409255b40cb139ad2
+    m_Address: "Assets/TextMesh Pro/Fonts/\u6B63\u6587.ttf"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 555a9c10a9e643f45b2cd4051a7deade, type: 2}
   m_SchemaSet:
