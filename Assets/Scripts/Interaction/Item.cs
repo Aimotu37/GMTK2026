@@ -54,7 +54,7 @@ public class Item : MonoBehaviour, IInteractive
         IsDragging = false;
         if (isAccepted)
         {
-            StartCoroutine(SnapAndDestroy(InteractionController.Instance.DropZonePosition));
+            StartCoroutine(SnapAndDestroy(InteractionController.Instance.SpeakerZonePosition));
         }
         else
         {

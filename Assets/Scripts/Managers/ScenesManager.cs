@@ -11,6 +11,7 @@ class Scenes
     public const string MainMenuSceneName = "Scene_Main";
     public const string Level_1_SceneName = "Scene_Level_1";
     public const string Interaction_Test_SceneName = "Scene_Interaction_Test";
+    public const string Interaction_Test_1_SceneName = "Scene_Interaction_Test_1";
 }
 
 /// <summary>

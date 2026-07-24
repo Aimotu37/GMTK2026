@@ -372,7 +372,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1692044023861794215
 RectTransform:
   m_ObjectHideFlags: 0
@@ -486,6 +486,7 @@ GameObject:
   - component: {fileID: 5138507002384406600}
   - component: {fileID: 8286685403934190463}
   - component: {fileID: 6970319065505931397}
+  - component: {fileID: 3325697182837367075}
   m_Layer: 5
   m_Name: MainMenuPanel
   m_TagString: Untagged
@@ -541,6 +542,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8fd11d1f23dd5345a70c5b37f2e20ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &3325697182837367075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4017633182951890282}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0982fb6cfb2a584ca07f5b7ccbd5d00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _panelName: main_menu_panel
+  _panelLayer: 1
 --- !u!1 &4093623814545115231
 GameObject:
   m_ObjectHideFlags: 0

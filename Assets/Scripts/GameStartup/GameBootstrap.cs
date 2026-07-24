@@ -81,8 +81,8 @@ public sealed class GameBootstrap : MonoBehaviour
         //EventCenterMgr.Instance.EventRegister<string>(GameEvents.SceneLoaded, HandleSceneLoaded);
         _loadingView.ShowSceneLoading(Scenes.MainMenuSceneName);
         HandleSceneLoaded(Scenes.MainMenuSceneName);
-        ScenesManager.Instance.LoadSceneAsync(Scenes.MainMenuSceneName);
-        //gameManager.LoadMainMenu(_mainMenuSceneName);
+        //ScenesManager.Instance.LoadSceneAsync(Scenes.MainMenuSceneName);
+        GameManager.Instance.LoadMainMenu();
     }
 
     private static GameStartPipeline CreatePipeline()

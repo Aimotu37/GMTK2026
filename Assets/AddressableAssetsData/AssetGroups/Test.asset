@@ -17,8 +17,23 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: 0e4e0feed97019146b16b55c342e360d
   m_SerializeEntries:
+  - m_GUID: 4d0f8e220dce3b1488ad17f792793e58
+    m_Address: ui/success_panel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 65abf8da3b9b20042ba1258406671acf
     m_Address: audio/bgm/testBgm
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9dca02343c04ed74cbc2ad8fceefbe5a
+    m_Address: ui/death_panel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ba412ff632e0f8e4eb6c0d9f9e550027
+    m_Address: ui/clue_panel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

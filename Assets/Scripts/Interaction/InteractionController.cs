@@ -3,37 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class InteractionController : MonoBehaviour
+public class InteractionController : SingletonMono<InteractionController>
 {
-    private static InteractionController _instance;
-    public static InteractionController Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                //尝试获取现有实例
-                _instance = FindFirstObjectByType<InteractionController>();
-                if (_instance == null)
-                {
-                    GameObject singleton = new GameObject(typeof(InteractionController).Name);
-                    _instance = singleton.AddComponent<InteractionController>();
-                }
-            }
-            return _instance;
-        }
-    }
-
-    [Header("交互区域引用")]
-    [SerializeField] private Transform dropZoneTransform;   // 发声槽的位置（用于磁吸）
-    [SerializeField] private Collider2D dropZoneCollider;   // 发声槽的碰撞体（用于检测）
-    [SerializeField] private LayerMask dropZoneLayerMask;   // 或者用 Layer 检测
+    [SerializeField] private Transform speakerZoneTransform;   // 发声槽的位置（用于磁吸）
+    [SerializeField] private Collider2D speakerZoneCollider;   // 发声槽的碰撞体（用于检测）
+    [SerializeField] private LayerMask speakerZoneLayerMask;   // 或者用 Layer 检测
+    public Vector3 SpeakerZonePosition => speakerZoneTransform.position;
 
     public TypewriterEffect typewriter;
 
     [Header("调试信息")]
     [SerializeField] private Item currentItem;
-    public Vector3 DropZonePosition => dropZoneTransform != null ? dropZoneTransform.position : Vector3.zero;
 
     public UnityAction<string, Item> OnItemDroppedToZone;
 
@@ -61,6 +41,14 @@ public class InteractionController : MonoBehaviour
         {
             OnMouseUpOnItem();
         }
+    }
+
+    //初始化发声槽
+    public void SetSpeakerZone(SpeakerZone zone)
+    {
+        speakerZoneTransform = zone.speakerZoneTransform;
+        speakerZoneCollider = zone.speakerZoneCollider;
+        speakerZoneLayerMask = zone.speakerZoneLayerMask;
     }
 
     public void OnMouseDownOnItem()
@@ -98,32 +86,25 @@ public class InteractionController : MonoBehaviour
 
         if (isOverDropZone)
         {
-            if (GameManager.Instance.CheckWord(currentItem.ItemID))
-            {
-                AcceptCurrentDrop();
-            }
-            else
-            {
-                RejectCurrentDrop();
-            }
+            string itemID = currentItem.ItemID;
+            GameManager.Instance.CheckWord(itemID);
+            AcceptCurrentDrop();
         }
         else
         {
-            currentItem.OnDragEnd(false);
-            currentItem = null;
-            isDragging = false;
+            RejectCurrentDrop();
         }
     }
 
     private bool CheckOverlapWithDropZone(Item item)
     {
-        if (dropZoneCollider == null || item == null) return false;
+        if (speakerZoneCollider == null || item == null) return false;
 
         Collider2D itemCol = item.GetCollider();
         if (itemCol == null) return false;
 
         Bounds itemBounds = itemCol.bounds;
-        Bounds zoneBounds = dropZoneCollider.bounds;
+        Bounds zoneBounds = speakerZoneCollider.bounds;
 
         bool overlap = itemBounds.min.x < zoneBounds.max.x &&
                        itemBounds.max.x > zoneBounds.min.x &&
@@ -139,6 +120,7 @@ public class InteractionController : MonoBehaviour
         currentItem.OnDragEnd(true);
         currentItem = null;
         isDragging = false;
+
     }
 
     public void RejectCurrentDrop()

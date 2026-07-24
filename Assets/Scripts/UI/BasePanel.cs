@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -20,6 +21,7 @@ public class BasePanel : MonoBehaviour
         CacheComponents<Toggle>();
         CacheComponents<Slider>();
         CacheComponents<ScrollRect>();
+        CacheComponents<TMP_Text>();
     }
 
     public void Init(string panelName)
@@ -86,23 +88,24 @@ public class BasePanel : MonoBehaviour
         T[] components = GetComponentsInChildren<T>(true);
         foreach (T component in components)
         {
-            string componentName = component.gameObject.name;
-            if (!_components.TryGetValue(componentName, out List<UIBehaviour> cachedComponents))
+            string componentGameObjectName = component.gameObject.name;
+            if (!_components.TryGetValue(componentGameObjectName, out List<UIBehaviour> cachedComponents))
             {
                 cachedComponents = new List<UIBehaviour>();
-                _components.Add(componentName, cachedComponents);
+                print(componentGameObjectName + " " + component);
+                _components.Add(componentGameObjectName, cachedComponents);
             }
 
             cachedComponents.Add(component);
 
             if (component is Button button)
             {
-                button.onClick.AddListener(() => OnButtonClick(componentName));
+                button.onClick.AddListener(() => OnButtonClick(componentGameObjectName));
             }
 
             if (component is Slider slider)
             {
-                slider.onValueChanged.AddListener((value) => OnSliderValueChange(componentName));
+                slider.onValueChanged.AddListener((value) => OnSliderValueChange(componentGameObjectName));
             }
         }
     }
