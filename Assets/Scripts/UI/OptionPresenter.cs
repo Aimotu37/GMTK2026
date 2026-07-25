@@ -8,20 +8,33 @@ public class OptionPresenter : MonoBehaviour
     [SerializeField] private string _panelName = "option_panel";
     [SerializeField] private E_UILayer _panelLayer = E_UILayer.MiddleLayer;
 
+    Dictionary<string, int> buttonBindOptionId = new Dictionary<string, int>();
+
     private void Start()
     {
         _panel = GetComponent<OptionPanel>();
         RegisterEvents();
+        OnPanelShown();
     }
 
     private void OnDestroy()
     {
         if (_panel != null)
         {
-            _panel.Option1Clicked -= HandleOption1;
-            _panel.Option1Clicked -= HandleOption2;
-            _panel.Option1Clicked -= HandleOption3;
+            _panel.Option1Clicked -= HandleOption;
+            _panel.Option2Clicked -= HandleOption;
+            _panel.Option3Clicked -= HandleOption;
         }
+    }
+
+    private void OnPanelShown()
+    {
+        List<OptionData> options = new List<OptionData>();
+        foreach (var option in GameManager.Instance.Options.Values)
+        {
+            options.Add(option);
+        }
+        buttonBindOptionId = _panel.InitButtonText(options);
     }
 
     private void RegisterEvents()
@@ -32,22 +45,15 @@ public class OptionPresenter : MonoBehaviour
             return;
         }
 
-        _panel.Option1Clicked += HandleOption1;
-        _panel.Option1Clicked += HandleOption2;
-        _panel.Option1Clicked += HandleOption3;
+        _panel.Option1Clicked += HandleOption;
+        _panel.Option2Clicked += HandleOption;
+        _panel.Option3Clicked += HandleOption;
     }
 
-    private void HandleOption1()
+    private void HandleOption(string name)
     {
-
+        GameManager.Instance.CheckCaseWin(buttonBindOptionId[name]);
+        UIManager.Instance.HidePanel("option_panel");
     }
 
-    private void HandleOption2()
-    {
-
-    }
-    private void HandleOption3()
-    {
-
-    }
 }

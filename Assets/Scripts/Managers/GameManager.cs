@@ -28,14 +28,23 @@ public class GameManager : SingletonMono<GameManager>
     private DebuffDataSO _debuff;
 
     private Dictionary<int, ItemData> _items = new Dictionary<int, ItemData>();
+    public Dictionary<int, ItemData> Items => _items;
     private Dictionary<int, OptionData> _options = new Dictionary<int, OptionData>();
+    public Dictionary<int, OptionData> Options => _options;
 
-    private List<int> currentCaseOptionIds = new List<int>() { 1001, 1002, 1003 };
-    private List<int> currentCaseItemIds = new List<int>();
+    //对话次数
     private int _currentWords = DEFAULT_WORDS;
-    private int _currentCaseIndex;
+    //案件数据相关
+    private List<int> allCaseIds = new List<int>() { 1001, 1002, 1003 };
     private int _currentCaseId;
+    private int _currentCaseIndex;
     private int _iscurrentCasePassed;
+    //线索相关
+    private List<int> _gotCaseItemIds = new List<int>();
+    public List<int> GotCaseItemIds => _gotCaseItemIds;
+    private int latestItemId;
+    public int LatestItemId => latestItemId;
+    //当前buff
     private int _currentDebuffId;
 
     private bool _isCorrect;
@@ -107,19 +116,15 @@ public class GameManager : SingletonMono<GameManager>
     //游戏行为
     public void StartNewGame()
     {
-        _currentCaseId = 1001;
-        _currentWords = DEFAULT_WORDS;
+        ResetAllGameRuntimeData();
         PrepareCaseData(_currentCaseId);
-        ScenesManager.Instance?.LoadSceneAsync(Scenes.Interaction_Test_SceneName, () =>
+        ScenesManager.Instance?.LoadSceneAsync(Scenes.CaseScenePrefix + _currentCaseId, () =>
         {
-            UIManager.Instance.HidePanel("main_menu_panel");
             speakerZone = FindAnyObjectByType<SpeakerZone>();
             interaction = InteractionController.Instance;
             interaction.SetSpeakerZone(speakerZone);
             flow = FlowController.Instance;
-            UIManager.Instance.ShowPanel<DemonPanel>("demon_panel");
-            UIManager.Instance.ShowPanel<CaseBoardPanel>("case_board_panel");
-            // 捕获场景初始快照，便于后续不切场景复原
+            flow.FlowInit();
             CaptureSceneSnapshot();
         });
         SwitchGameState(GameState.Playing);
@@ -127,6 +132,7 @@ public class GameManager : SingletonMono<GameManager>
 
     public void RetryCurrentCase()
     {
+        flow.FlowInit();
         Scene active = SceneManager.GetActiveScene();
         if (!active.IsValid())
         {
@@ -175,22 +181,36 @@ public class GameManager : SingletonMono<GameManager>
 
         // 恢复单局变量并启用输入
         _currentWords = DEFAULT_WORDS;
-        EventManager.Instance.EventTrigger<int>(GameEvents.CountChanged, _currentWords);
+        EventManager.Instance.EventTrigger(GameEvents.CountChanged, _currentWords);
+        //需要恢复案件线索板
         UIManager.Instance.HidePanel("case_board_panel");
         UIManager.Instance.ShowPanel<CaseBoardPanel>("case_board_panel");
+
         SwitchGameState(GameState.Playing);
         if (InputManager.Instance != null) InputManager.Instance.SetInputEnabled(true);
     }
 
     public void NextCase()
     {
+        if (_currentCaseIndex + 1 <= allCaseIds.Count)
+            _currentCaseIndex += 1;
+        _currentCaseId = allCaseIds[_currentCaseIndex];
+        _currentWords = DEFAULT_WORDS;
+
+        _items.Clear();
+        _options.Clear();
+
+        _gotCaseItemIds.Clear();
+
+        _sceneSnapshots.Clear();
         PrepareCaseData(_currentCaseId);
-        ScenesManager.Instance?.LoadSceneAsync(Scenes.Interaction_Test_1_SceneName, () =>
+        ScenesManager.Instance?.LoadSceneAsync(Scenes.CaseScenePrefix + _currentCaseId, () =>
         {
             speakerZone = FindAnyObjectByType<SpeakerZone>();
             interaction = InteractionController.Instance;
             interaction.SetSpeakerZone(speakerZone);
             flow = FlowController.Instance;
+            flow.FlowInit();
             CaptureSceneSnapshot();
         });
     }
@@ -239,11 +259,13 @@ public class GameManager : SingletonMono<GameManager>
         _currentCaseId = caseId;
         _currentCaseData = DataManager.Instance.GetCase(caseId);
         _currentCaseItems = DataManager.Instance.GetItems(caseId);
+        _items.Clear();
         foreach (var item in _currentCaseItems.itemDatas)
         {
             _items.Add(item.itemID, item);
         }
         _currentCaseOtions = DataManager.Instance.GetOptions(caseId);
+        _options.Clear();
         foreach (var option in _currentCaseOtions.optionDatas)
         {
             _options.Add(option.optionID, option);
@@ -260,7 +282,7 @@ public class GameManager : SingletonMono<GameManager>
         if (_sceneSnapshots.ContainsKey(active.name)) return; // 已有快照不重复捕获
 
         GameObject root = new GameObject($"_SceneSnapshot_{active.name}");
-        DontDestroyOnLoad(root);
+        //DontDestroyOnLoad(root);
 
         // 仅捕获需要恢复的类型，避免克隆单例或管理器
         Item[] items = GameObject.FindObjectsOfType<Item>(true);
@@ -286,19 +308,37 @@ public class GameManager : SingletonMono<GameManager>
         else
         {
             string clue = $"已提取{_items[itemId].itemName}留声：{_items[itemId].clueText}";
-            EventManager.Instance.EventTrigger(GameEvents.DropItemOnZone, _items[itemId]);
+            GotCaseItemIds.Add(itemId);
+            latestItemId = itemId;
             flow.ShowCluePopup(clue);
         }
     }
 
-    public void CheckWin(string caseId)
+    public void CheckCaseWin(int optionId)
     {
-        flow.ShowSuccess(caseId);
+        if (_options[optionId].isCorrect)
+        {
+            flow.ShowSuccess(_currentCaseId);
+        }
     }
 
     public void DemonSpeak()
     {
         int index = Random.Range(0, 3);
         EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, _demonSpeak.demonSpeakDatas[index].defaultSpeak);
+    }
+
+    private void ResetAllGameRuntimeData()
+    {
+        _currentCaseIndex = 0;
+        _currentCaseId = allCaseIds[_currentCaseIndex];
+        _currentWords = DEFAULT_WORDS;
+
+        _items.Clear();
+        _options.Clear();
+
+        _gotCaseItemIds.Clear();
+
+        _sceneSnapshots.Clear();
     }
 }

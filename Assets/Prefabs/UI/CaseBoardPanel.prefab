@@ -608,7 +608,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f30b1cad53cb64642a355ce7935eca55, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _panelName: main_menu_panel
+  _panelName: case_board_panel
   _panelLayer: 1
 --- !u!1 &5005481019114805249
 GameObject:
@@ -991,7 +991,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 1783783116682231161}
   m_OnClick:
     m_PersistentCalls:

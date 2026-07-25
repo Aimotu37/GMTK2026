@@ -25,12 +25,13 @@ public class FlowController : SingletonMono<FlowController>
     private float clueDuration = 1.5f;
     private float demonSpeakInterval = 10.0f;
     private string _pendingClueText;
-    private string _currentCase;
+    private int _currentCase;
+    private Coroutine demonSpeak;
 
-    public Item currentDragItem;
 
-    private void Start()
+    public void FlowInit()
     {
+        ReSetAllFlowData();
         FlowStateChange(GameFlowState.Initiating);
     }
 
@@ -40,7 +41,20 @@ public class FlowController : SingletonMono<FlowController>
         FlowStateChange(GameFlowState.CluePopup);
     }
 
-    public void ShowSuccess(string caseId)
+    public void ShowOption(bool isShow)
+    {
+        if (isShow)
+        {
+            FlowStateChange(GameFlowState.OptionChoosing);
+        }
+        else
+        {
+            UIManager.Instance.HidePanel("option_panel");
+            FlowStateChange(GameFlowState.Exploring);
+        }
+    }
+
+    public void ShowSuccess(int caseId)
     {
         _currentCase = caseId;
         FlowStateChange(GameFlowState.Success);
@@ -50,6 +64,16 @@ public class FlowController : SingletonMono<FlowController>
     {
         _currentState = state;
         TransitionTo(state);
+    }
+
+    public void ReSetAllFlowData()
+    {
+        _currentState = GameFlowState.Initiating;
+        _pendingClueText = "";
+        _currentCase = 0;
+        if (demonSpeak != null)
+            StopCoroutine(demonSpeak);
+        demonSpeak = null;
     }
 
     private void TransitionTo(GameFlowState newState)
@@ -72,7 +96,7 @@ public class FlowController : SingletonMono<FlowController>
                 StartCoroutine(HandleCluePopup());
                 break;
             case GameFlowState.OptionChoosing:
-                //SceneManager.LoadScene(OPTION_SCENE);
+                StartCoroutine(HandleOptionChose());
                 break;
 
             case GameFlowState.Success:
@@ -97,11 +121,18 @@ public class FlowController : SingletonMono<FlowController>
 
     private IEnumerator HandleFlowInitialize()
     {
-        print("加载案件场景");
-        yield return new WaitForSeconds(1.0f);
-        print("加载案件场景完成");
-        _currentState = GameFlowState.StoryPlaying;
-        TransitionTo(_currentState);
+        UIManager.Instance.HidePanel("main_menu_panel");
+        yield return null;
+        //需要恢复案件线索板
+        UIManager.Instance.HidePanel("case_board_panel");
+        UIManager.Instance.ShowPanel<CaseBoardPanel>("case_board_panel");
+        UIManager.Instance.HidePanel("demon_panel");
+        UIManager.Instance.ShowPanel<DemonPanel>("demon_panel", E_UILayer.TopLayer, (panel) =>
+        {
+            EventManager.Instance.EventTrigger(GameEvents.CheckCaseClues, GameManager.Instance.GotCaseItemIds.Count > 0);
+            _currentState = GameFlowState.StoryPlaying;
+            TransitionTo(_currentState);
+        });
     }
 
     private IEnumerator HandleStoryPlay(float duration)
@@ -121,7 +152,7 @@ public class FlowController : SingletonMono<FlowController>
     private IEnumerator HandleExplore()
     {
         GameManager.Instance.DemonSpeak();
-        StartCoroutine(DemonSpeakPeriodically());
+        demonSpeak = StartCoroutine(DemonSpeakPeriodically());
         yield break;
     }
 
@@ -157,6 +188,9 @@ public class FlowController : SingletonMono<FlowController>
                 (tempPanel as CluePanel).SetCanvasGroupAlpha(t);
                 yield return null;
             }
+            ItemData item = GameManager.Instance.Items[GameManager.Instance.LatestItemId];
+            EventManager.Instance.EventTrigger(GameEvents.DropItemOnZone, item);
+            EventManager.Instance.EventTrigger(GameEvents.CheckCaseClues, GameManager.Instance.GotCaseItemIds.Count > 0);
             UIManager.Instance.HidePanel("clue_panel");
         }
         InputManager.Instance.SetInputEnabled(true);
@@ -165,6 +199,7 @@ public class FlowController : SingletonMono<FlowController>
     private IEnumerator HandleOptionChose()
     {
         // 1.选项页面播弹出
+        UIManager.Instance.ShowPanel<OptionPanel>("option_panel");
         yield break;
     }
 
@@ -172,11 +207,11 @@ public class FlowController : SingletonMono<FlowController>
     {
         // 1.成功推理页面
         yield return new WaitForSeconds(0.5f);
-        UIManager.Instance.ShowPanel<SuccessPanel>("success_panel", E_UILayer.TopLayer);
+        UIManager.Instance.ShowPanel<SuccessPanel>("success_panel", E_UILayer.MiddleLayer);
         yield break;
     }
 
-    private IEnumerator HandleTruthShowe()
+    private IEnumerator HandleTruthShow()
     {
         // 1.展示真相页面
         yield break;
@@ -186,7 +221,7 @@ public class FlowController : SingletonMono<FlowController>
     {
         yield return new WaitForSeconds(0.5f);
         GameManager.Instance.GameOver();
-        UIManager.Instance.ShowPanel<DeathPanel>("death_panel", E_UILayer.TopLayer);
+        UIManager.Instance.ShowPanel<DeathPanel>("death_panel", E_UILayer.MiddleLayer);
         yield break;
     }
 
@@ -209,6 +244,7 @@ public class FlowController : SingletonMono<FlowController>
 
     private IEnumerator DemonSpeakPeriodically()
     {
+        if (demonSpeak != null) yield break;
         float elapsed = demonSpeakInterval;
         while (elapsed > 0f)
         {

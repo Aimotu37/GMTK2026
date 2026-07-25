@@ -32,6 +32,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c2f13fdbaee10c049b2cef22983df4be
+    m_Address: ui/option_panel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fcd475959e638d347a66b3345bbb60cd
     m_Address: config/debuffs
     m_ReadOnly: 0

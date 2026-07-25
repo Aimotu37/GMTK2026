@@ -37,6 +37,7 @@ class GameEvents
     //游戏内事件
     public const string DropItemOnZone = "OnItemOnZone";
     public const string CountChanged = "OnCountChanged";
+    public const string CheckCaseClues = "OnCheckCaseClues";
     public const string DemonSpeak = "OnDemonSpeak";
     public const string DebuffEffect = "OnDebuffEffect";
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,8 +6,22 @@ using UnityEngine.UI;
 
 public class CaseBoardPanel : BasePanel
 {
+
+    private const string TruthButtonName = "RestoreTruthButton";
     [SerializeField] private Transform content;
     private List<ClueItem> clutItems = new List<ClueItem>();
+
+    public event Action OnTruthClicked;
+
+    protected override void OnButtonClick(string buttonName)
+    {
+        switch (buttonName)
+        {
+            case TruthButtonName:
+                OnTruthClicked?.Invoke();
+                break;
+        }
+    }
 
     void Start()
     {
@@ -27,6 +42,11 @@ public class CaseBoardPanel : BasePanel
         StartCoroutine(RefreshLayoutNextFrame());
     }
 
+    public void SetTruthInteractable(bool interactable)
+    {
+        FindComponent<Button>(TruthButtonName).interactable = interactable;
+    }
+
 
     private IEnumerator RefreshLayoutNextFrame()
     {
@@ -34,4 +54,5 @@ public class CaseBoardPanel : BasePanel
         LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)content);
         Canvas.ForceUpdateCanvases();
     }
+
 }
