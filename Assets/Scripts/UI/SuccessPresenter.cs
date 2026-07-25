@@ -15,6 +15,8 @@ public class SuccessPresenter : MonoBehaviour
     {
         _panel = GetComponent<SuccessPanel>();
         RegisterEvents();
+
+        EventManager.Instance.EventRegister<string>(GameEvents.CaseTruthShow, ShowTruth);
     }
 
     void OnDestroy()
@@ -23,6 +25,7 @@ public class SuccessPresenter : MonoBehaviour
         {
             _panel.NextCaseClicked -= HandleNextCase;
         }
+        EventManager.Instance.EventUnregister<string>(GameEvents.CaseTruthShow, ShowTruth);
     }
 
     private void RegisterEvents()
@@ -40,5 +43,10 @@ public class SuccessPresenter : MonoBehaviour
     {
         GameManager.Instance.NextCase();
         UIManager.Instance.HidePanel(_panelName);
+    }
+
+    private void ShowTruth(string truthText)
+    {
+        _panel.ShowCaseTruth(truthText);
     }
 }

@@ -33,24 +33,31 @@ public class InteractionController : SingletonMono<InteractionController>
 
     public void Update()
     {
-
+        // ★ 第一优先级：检查是否点击在 UI 上
         if (UnityEngine.EventSystems.EventSystem.current != null &&
             UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
-            return;
+        {
+            if (InputManager.Instance.GetMouseDown(0))
+            {
+                UIEmptyClick();
+            }
+            return;  // ← UI 上的点击，直接结束，不处理游戏对象
+        }
 
+        // ★ 第二优先级：处理游戏对象点击
         if (InputManager.Instance.GetMouseDown(0))
         {
-            OnMouseDownOnItem();
+            OnMouseDownOnObject();
         }
 
         if (InputManager.Instance.GetMouse(0))
         {
-            OnMouseDragOnItem();
+            OnMouseDragOnObject();
         }
 
         if (InputManager.Instance.GetMouseUp(0))
         {
-            OnMouseUpOnItem();
+            OnMouseUpOnObject();
         }
     }
 
@@ -67,7 +74,7 @@ public class InteractionController : SingletonMono<InteractionController>
         dragBoundsCollider = boundsCollider;
     }
 
-    public void OnMouseDownOnItem()
+    public void OnMouseDownOnObject()
     {
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(InputManager.Instance.GetMousePosition());
         mousePos.z = 0f;
@@ -86,7 +93,23 @@ public class InteractionController : SingletonMono<InteractionController>
         }
     }
 
-    public void OnMouseDragOnItem()
+    public void UIEmptyClick()
+    {
+        if (FlowController.Instance.IsWaitForClickEmpty)
+        {
+            if (FlowController.Instance.CurrentState == GameFlowState.Success)
+            {
+                FlowController.Instance.ShowCaseTruth();
+            }
+            else if (FlowController.Instance.CurrentState == GameFlowState.Death)
+            {
+                GameManager.Instance.RetryCurrentCase();
+                UIManager.Instance.HidePanel("death_panel");
+            }
+        }
+    }
+
+    public void OnMouseDragOnObject()
     {
         if (!isDragging || currentItem == null) return;
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(InputManager.Instance.GetMousePosition());
@@ -96,7 +119,7 @@ public class InteractionController : SingletonMono<InteractionController>
         currentItem.OnDragUpdate(targetPos);
     }
 
-    public void OnMouseUpOnItem()
+    public void OnMouseUpOnObject()
     {
         if (!isDragging || currentItem == null) return;
         bool isOverDropZone = CheckOverlapWithDropZone(currentItem);
