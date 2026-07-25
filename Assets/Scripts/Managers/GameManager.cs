@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -17,6 +17,8 @@ public class GameManager : SingletonMono<GameManager>
 {
     private GameState _currentState = GameState.MainMenu;
     public GameState CurrentState => _currentState;
+
+    public CaseDataSO CurrentCaseData => _currentCaseData;
 
     private const int DEFAULT_WORDS = 4;
 
@@ -189,11 +191,21 @@ public class GameManager : SingletonMono<GameManager>
         SwitchGameState(GameState.Playing);
         if (InputManager.Instance != null) InputManager.Instance.SetInputEnabled(true);
     }
+    //是否最后一案判断
+    public bool IsLastCase()
+    {
+        return _currentCaseIndex >= allCaseIds.Count - 1;
+    }
 
     public void NextCase()
     {
-        if (_currentCaseIndex + 1 <= allCaseIds.Count)
-            _currentCaseIndex += 1;
+        if (IsLastCase())
+        {
+            flow.FlowStateChange(GameFlowState.TrueEnd);
+            return;
+        }
+
+        _currentCaseIndex += 1;
         _currentCaseId = allCaseIds[_currentCaseIndex];
         _currentWords = DEFAULT_WORDS;
 
@@ -327,6 +339,13 @@ public class GameManager : SingletonMono<GameManager>
         int index = Random.Range(0, 3);
         EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, _demonSpeak.demonSpeakDatas[index].defaultSpeak);
     }
+    //真结局用的恶魔发言方法
+    public void DemonDefeatSpeak()
+    {
+        int index = Random.Range(0, _demonSpeak.demonSpeakDatas.Count);
+        EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, _demonSpeak.demonSpeakDatas[index].defeatSpeak);
+    }
+
 
     private void ResetAllGameRuntimeData()
     {

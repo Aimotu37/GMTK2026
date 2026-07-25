@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -115,6 +115,7 @@ public class FlowController : SingletonMono<FlowController>
 
             case GameFlowState.TrueEnd:
                 //SceneManager.LoadScene(TRUE_END_SCENE);
+                StartCoroutine(HandleTrueEnd());
                 break;
         }
     }
@@ -137,14 +138,37 @@ public class FlowController : SingletonMono<FlowController>
 
     private IEnumerator HandleStoryPlay(float duration)
     {
-        //播放剧情动画
-        float elapsed = 0f;
-        while (elapsed < duration)
+        //播放剧情动画：读取当前案件的剧情文本，通过恶魔面板打字机播放
+        string story = GameManager.Instance.CurrentCaseData != null
+            ? GameManager.Instance.CurrentCaseData.storyText
+            : null;
+
+        if (string.IsNullOrEmpty(story))
         {
-            elapsed += Time.deltaTime;
-            yield return null;
+            // 没有配置剧情文本时，退回到纯等待，避免卡流程
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
         }
-        print("播放动画结束");
+        //print("播放动画结束");
+         else
+        {
+            DemonPanel panel = UIManager.Instance.GetPanel<DemonPanel>("demon_panel");
+            if (panel == null)
+            {
+                Debug.LogWarning("HandleStoryPlay: 未找到 demon_panel，无法播放剧情文本。");
+            }
+            else
+            {
+                bool typingDone = false;
+                panel.PlayStory(story, () => typingDone = true);
+                yield return new WaitUntil(() => typingDone);
+            }
+        }
+
         _currentState = GameFlowState.Exploring;
         TransitionTo(_currentState);
     }
@@ -227,8 +251,10 @@ public class FlowController : SingletonMono<FlowController>
 
     private IEnumerator HandleTrueEnd()
     {
-        // 1.结局页面
-        // 2.结局对话文本
+        
+        // 结局页面复用剧情/恶魔对话框，播放恶魔被击败发言（DemonSpeakConfig.DefeatSpeak）
+        UIManager.Instance.HidePanel("case_board_panel");
+        GameManager.Instance.DemonDefeatSpeak();
         yield break;
     }
 
