@@ -53,15 +53,6 @@ public class DemonPanel : BasePanel
         typewriter.StartTyping(text);
     }
 
-    /// <summary>
-    /// 播放一段剧情/结局文本，完成后触发回调（用于初始剧情、真结局等需要等待播放结束再切换流程的场景）
-    /// </summary>
-    public void PlayStory(string text, Action onComplete)
-    {
-        typewriter.SetTextMesh(demonSpeakText as TextMeshProUGUI);
-        typewriter.StartTyping(text, onComplete);
-    }
-
     private void SetDebuff(string text)
     {
         typewriter.SetTextMesh(debuff as TextMeshProUGUI);

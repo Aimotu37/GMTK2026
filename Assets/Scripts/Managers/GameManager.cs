@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
+using Random = UnityEngine.Random;  // 明确指定 Random 为 UnityEngine.Random
 
 
 public enum GameState
@@ -134,7 +136,7 @@ public class GameManager : SingletonMono<GameManager>
 
     public void RetryCurrentCase()
     {
-        flow.FlowInit();
+        flow.FlowInit(playIntroStory: false);
         Scene active = SceneManager.GetActiveScene();
         if (!active.IsValid())
         {
@@ -339,13 +341,91 @@ public class GameManager : SingletonMono<GameManager>
         int index = Random.Range(0, 3);
         EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, _demonSpeak.demonSpeakDatas[index].defaultSpeak);
     }
-    //真结局用的恶魔发言方法
-    public void DemonDefeatSpeak()
+    /// <summary>随机取一条恶魔被击败发言（真结局用），不触发事件，交给调用方自行展示</summary>
+    public string GetRandomDefeatSpeak()
+    {
+        if (_demonSpeak == null || _demonSpeak.demonSpeakDatas == null || _demonSpeak.demonSpeakDatas.Count == 0)
+        {
+            return string.Empty;
+        }
+        int index = Random.Range(0, _demonSpeak.demonSpeakDatas.Count);
+        return _demonSpeak.demonSpeakDatas[index].defeatSpeak;
+    }
+   /* public void DemonDefeatSpeak()
     {
         int index = Random.Range(0, _demonSpeak.demonSpeakDatas.Count);
         EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, _demonSpeak.demonSpeakDatas[index].defeatSpeak);
     }
+   原代码*/
+    /// <summary>
+    /// 播放开场剧情（恶魔契约对话），整局游戏只在第一次“开始游戏”时播放一次，播完后回调
+    /// </summary>
+    public void PlayOpeningStory(Action onComplete)
+    {
+        DemonSpeakDataSO demonSpeak = DataManager.Instance.GetDemonSpeak();
+        List<string> lines = demonSpeak != null ? demonSpeak.openingLines : null;
+        if (lines == null || lines.Count == 0)
+        {
+            onComplete?.Invoke();
+            return;
+        }
+        StartCoroutine(PlayOpeningLines(lines, onComplete));
+    }
 
+    private IEnumerator PlayOpeningLines(List<string> lines, Action onComplete)
+    {
+        StoryDialoguePanel panel = null;
+        yield return GetOrLoadStoryDialoguePanel(p => panel = p);
+        
+        if (panel == null)
+        {
+            Debug.LogWarning("PlayOpeningLines: 未找到 story_dialogue_panel，跳过开场剧情播放。");
+            onComplete?.Invoke();
+            yield break;
+        }
+
+        foreach (string line in lines)
+        {
+            if (string.IsNullOrEmpty(line)) continue;
+            yield return PlayLineAndWaitForContinue(panel, line);
+        }
+
+        UIManager.Instance.HidePanel("story_dialogue_panel");
+        onComplete?.Invoke();
+    }
+
+    /// <summary>
+    /// 获取（必要时加载）通用剧情对话框，通过回调返回实例（找不到时回调传 null）
+    /// </summary>
+    public IEnumerator GetOrLoadStoryDialoguePanel(Action<StoryDialoguePanel> onReady)
+    {
+        StoryDialoguePanel panel = UIManager.Instance.GetPanel<StoryDialoguePanel>("story_dialogue_panel");
+        if (panel != null)
+        {
+            onReady?.Invoke(panel);
+            yield break;
+        }
+
+        bool panelLoaded = false;
+        UIManager.Instance.ShowPanel<StoryDialoguePanel>("story_dialogue_panel", E_UILayer.TopLayer, (p) =>
+        {
+            panel = p;
+            panelLoaded = true;
+        });
+        yield return new WaitUntil(() => panelLoaded);
+        onReady?.Invoke(panel);
+    }
+
+    /// <summary>播完一句并等玩家点箭头推进（点击时若还在打字会先跳字，需要再点一次才会推进）</summary>
+    public IEnumerator PlayLineAndWaitForContinue(StoryDialoguePanel panel, string line)
+    {
+        bool advance = false;
+        Action onContinue = () => advance = true;
+        panel.ContinueClicked += onContinue;
+        panel.PlayLine(line, null);
+        yield return new WaitUntil(() => advance);
+        panel.ContinueClicked -= onContinue;
+    }
 
     private void ResetAllGameRuntimeData()
     {

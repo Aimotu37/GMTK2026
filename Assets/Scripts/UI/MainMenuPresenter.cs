@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 [DisallowMultipleComponent]
 public sealed class MainMenuPresenter : MonoBehaviour
@@ -39,7 +39,9 @@ public sealed class MainMenuPresenter : MonoBehaviour
 
     private void HandleNewGameClicked()
     {
-        GameManager.Instance.StartNewGame();
+        // 切到独立的开场剧情场景（恶魔契约对话），播完由该场景负责进入案件一
+        UIManager.Instance.HidePanel(_panelName);
+        ScenesManager.Instance.LoadSceneAsync(Scenes.OpeningSceneName);
     }
 
     private void HandleContinueClicked()

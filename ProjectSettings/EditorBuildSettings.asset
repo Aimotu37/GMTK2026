@@ -18,6 +18,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Scene_Interaction_test_1.unity
     guid: 9ae62d53cda7c7d4eb91b112ba53f7b4
   - enabled: 1
+    path: Assets/Scenes/Scene_Opening.unity
+    guid: 89740979a5df44645941dbdb37b29b48
+  - enabled: 1
     path: Assets/Scenes/Scene_Case_1001.unity
     guid: 9b0eb79d06b7ba243b62a7084d6cc416
   - enabled: 1

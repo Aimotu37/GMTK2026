@@ -27,11 +27,16 @@ public class FlowController : SingletonMono<FlowController>
     private string _pendingClueText;
     private int _currentCase;
     private Coroutine demonSpeak;
+    private bool _skipIntroStory;
 
 
-    public void FlowInit()
+    /// <summary>
+    /// 初始化流程；playIntroStory 为 false 时跳过案件剧情播放，直接进入探索（用于重试当前案件）
+    /// </summary>
+    public void FlowInit(bool playIntroStory = true)
     {
         ReSetAllFlowData();
+        _skipIntroStory = !playIntroStory;
         FlowStateChange(GameFlowState.Initiating);
     }
 
@@ -131,7 +136,7 @@ public class FlowController : SingletonMono<FlowController>
         UIManager.Instance.ShowPanel<DemonPanel>("demon_panel", E_UILayer.TopLayer, (panel) =>
         {
             EventManager.Instance.EventTrigger(GameEvents.CheckCaseClues, GameManager.Instance.GotCaseItemIds.Count > 0);
-            _currentState = GameFlowState.StoryPlaying;
+            _currentState = _skipIntroStory ? GameFlowState.Exploring : GameFlowState.StoryPlaying;
             TransitionTo(_currentState);
         });
     }
@@ -156,18 +161,19 @@ public class FlowController : SingletonMono<FlowController>
         //print("播放动画结束");
          else
         {
-            DemonPanel panel = UIManager.Instance.GetPanel<DemonPanel>("demon_panel");
+            StoryDialoguePanel panel = null;
+            yield return GameManager.Instance.GetOrLoadStoryDialoguePanel(p => panel = p);
+
             if (panel == null)
             {
-                Debug.LogWarning("HandleStoryPlay: 未找到 demon_panel，无法播放剧情文本。");
+                Debug.LogWarning("HandleStoryPlay: 未找到 story_dialogue_panel，无法播放剧情文本。");
             }
             else
             {
-                bool typingDone = false;
-                panel.PlayStory(story, () => typingDone = true);
-                yield return new WaitUntil(() => typingDone);
+                yield return GameManager.Instance.PlayLineAndWaitForContinue(panel, story);
+                UIManager.Instance.HidePanel("story_dialogue_panel");
             }
-        }
+         }
 
         _currentState = GameFlowState.Exploring;
         TransitionTo(_currentState);
@@ -251,11 +257,28 @@ public class FlowController : SingletonMono<FlowController>
 
     private IEnumerator HandleTrueEnd()
     {
-        
-        // 结局页面复用剧情/恶魔对话框，播放恶魔被击败发言（DemonSpeakConfig.DefeatSpeak）
+
+        // 结局页面复用通用剧情对话框，播放恶魔被击败发言（DemonSpeakConfig.DefeatSpeak）
         UIManager.Instance.HidePanel("case_board_panel");
-        GameManager.Instance.DemonDefeatSpeak();
-        yield break;
+        UIManager.Instance.HidePanel("demon_panel");
+
+        string speak = GameManager.Instance.GetRandomDefeatSpeak();
+        if (string.IsNullOrEmpty(speak))
+        {
+            yield break;
+        }
+
+        StoryDialoguePanel panel = null;
+        yield return GameManager.Instance.GetOrLoadStoryDialoguePanel(p => panel = p);
+
+        if (panel == null)
+        {
+            Debug.LogWarning("HandleTrueEnd: 未找到 story_dialogue_panel，无法播放结局发言。");
+            yield break;
+        }
+
+        // TODO: 美术资源到位后调用 panel.SetPortrait(恶魔被击败立绘) / panel.SetBackground(结局背景)
+        panel.PlayLine(speak, null);
     }
 
     private void ShowClueAnimation(string clue)

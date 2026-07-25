@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
@@ -9,6 +9,7 @@ class Scenes
 {
     public const string PersistentSceneName = "Scene_Persistent";
     public const string MainMenuSceneName = "Scene_Main";
+    public const string OpeningSceneName = "Scene_Opening";
     public const string Level_1_SceneName = "Scene_Level_1";
     //Case场景的名字=Prefix+caseID
     public const string CaseScenePrefix = "Scene_Case_";
