@@ -30,7 +30,7 @@ public class DemonPanel : BasePanel
         demonIcon = FindComponent<Image>("Demon");
         demonSpeakText = FindComponent<TMP_Text>("DemonSpeakText");
         countText = FindComponent<TMP_Text>("Number");
-        debuff = FindComponent<TMP_Text>("DebuffDesc");
+        debuff = FindComponent<TMP_Text>("DebuffName");
         debuffIcon = FindComponent<Image>("DebuffIcon");
         typewriter = GetComponent<TypewriterEffect>();
     }
@@ -55,7 +55,12 @@ public class DemonPanel : BasePanel
 
     private void SetDebuff(string text)
     {
-        typewriter.SetTextMesh(debuff as TextMeshProUGUI);
-        typewriter.StartTyping(text);
+        //typewriter.SetTextMesh(debuff as TextMeshProUGUI);
+        //typewriter.StartTyping(text);
+        // 不走打字机：小框只是个短标签，直接瞬间显示，避免跟顶部恶魔发言抢同一个打字机导致顶部那句被打断卡住
+        if (debuff != null)
+        {
+            debuff.text = text;
+        }
     }
 }

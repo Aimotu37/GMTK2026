@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -13,7 +13,9 @@ public class CaseBoradPresenter : MonoBehaviour
     {
         EventManager.Instance.EventRegister<ItemData>(GameEvents.DropItemOnZone, SetClue);
         EventManager.Instance.EventRegister<bool>(GameEvents.CheckCaseClues, CheckTruthInteractable);
+        EventManager.Instance.EventRegister<int>(GameEvents.CoverClue, CoverClue);
     }
+
 
     private void Start()
     {
@@ -25,6 +27,7 @@ public class CaseBoradPresenter : MonoBehaviour
     {
         EventManager.Instance.EventUnregister<ItemData>(GameEvents.DropItemOnZone, SetClue);
         EventManager.Instance.EventUnregister<bool>(GameEvents.CheckCaseClues, CheckTruthInteractable);
+        EventManager.Instance.EventUnregister<int>(GameEvents.CoverClue, CoverClue);
         if (_panel != null)
         {
             _panel.OnTruthClicked -= HandleTruthClick;
@@ -47,6 +50,12 @@ public class CaseBoradPresenter : MonoBehaviour
         int index = item.itemID % 100;
         string text = item.clueText;
         _panel.ChangeClueState(index - 1, text);
+    }
+
+    private void CoverClue(int itemId)
+    {
+        int index = itemId % 100;
+        _panel.CoverClueState(index - 1);
     }
 
     private void CheckTruthInteractable(bool interactable)

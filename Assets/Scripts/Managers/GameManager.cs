@@ -24,6 +24,9 @@ public class GameManager : SingletonMono<GameManager>
 
     private const int DEFAULT_WORDS = 4;
 
+    //每次发言后触发诅咒的概率（0~1），不是每次都触发
+    private const float DEBUFF_TRIGGER_CHANCE = 0.5f;
+
     //单局游戏变量
     private CaseDataSO _currentCaseData;
     private ItemDataSO _currentCaseItems;
@@ -39,8 +42,8 @@ public class GameManager : SingletonMono<GameManager>
     //对话次数
     private int _currentWords = DEFAULT_WORDS;
     //案件数据相关
-    // private List<int> allCaseIds = new List<int>() { 1001, 1002, 1003 };
-    private List<int> allCaseIds = new List<int>() { 1001 };//test
+    private List<int> allCaseIds = new List<int>() { 1001, 1002, 1003 };
+    //private List<int> allCaseIds = new List<int>() { 1001 };//test
     private int _currentCaseId;
     private int _currentCaseIndex;
     private int _iscurrentCasePassed;
@@ -326,7 +329,62 @@ public class GameManager : SingletonMono<GameManager>
             GotCaseItemIds.Add(itemId);
             latestItemId = itemId;
             flow.ShowCluePopup(clue);
+            //TriggerRandomDebuff();
         }
+    }
+
+    /// <summary>按概率决定这次是否触发诅咒；由线索弹窗播完之后调用，避免跟线索信息同时挤在一起</summary>
+    public void TryTriggerDebuff()
+    {
+        if (Random.value < DEBUFF_TRIGGER_CHANCE)
+        {
+            StartCoroutine(TriggerRandomDebuffRoutine());
+        }
+    }
+    /// <summary>
+    /// 每次发言后随机触发一条诅咒：先完整显示 DebuffDesc（描述，恶魔发言区）/ DebuffName（名称，"恶魔的诅咒"小框），
+    /// 留时间给玩家读完，之后才真正扣发言次数、判定是否死亡——避免死亡流程自己的嘲讽发言把诅咒描述立刻覆盖掉。
+    /// 目前只启用"发言次数减少"效果，"覆盖线索"（CoverRandomClue）先不参与随机，逻辑已就绪，需要时把下面的过滤条件去掉即可。
+    /// </summary>
+    private IEnumerator TriggerRandomDebuffRoutine()
+    {
+        if (_debuff == null || _debuff.debuffDatas == null || _debuff.debuffDatas.Count == 0) yield break;
+        List<DebuffData> candidates = _debuff.debuffDatas.FindAll(d => d.effectType == EffectType.ReduceSpeak);
+        if (candidates.Count == 0) yield break;
+
+        int index = Random.Range(0, candidates.Count);
+        DebuffData debuff = candidates[index];
+        _currentDebuffId = debuff.debuffID;
+
+        EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, debuff.debuffDesc);
+        EventManager.Instance.EventTrigger(GameEvents.DebuffEffect, debuff.debuffName);
+
+        // 给玩家留时间读完诅咒描述，再让效果真正生效
+        yield return new WaitForSeconds(2.0f);
+
+        if (int.TryParse(debuff.effectParam, out int reduceAmount) && reduceAmount > 0)
+        {
+            _currentWords = Mathf.Max(0, _currentWords - reduceAmount);
+            EventManager.Instance.EventTrigger(GameEvents.CountChanged, _currentWords);
+            if (_currentWords <= 0)
+            {
+                flow.FlowStateChange(GameFlowState.Death);
+            }
+        }
+      
+    }
+
+    /// <summary>从已获得的线索里随机挑一条，重新盖回"未获得"状态</summary>
+    private void CoverRandomClue()
+    {
+        if (_gotCaseItemIds.Count == 0) return;
+
+        int pick = Random.Range(0, _gotCaseItemIds.Count);
+        int itemId = _gotCaseItemIds[pick];
+        _gotCaseItemIds.RemoveAt(pick);
+
+        EventManager.Instance.EventTrigger(GameEvents.CoverClue, itemId);
+        EventManager.Instance.EventTrigger(GameEvents.CheckCaseClues, _gotCaseItemIds.Count > 0);
     }
 
     public void CheckCaseWin(int optionId)
@@ -334,6 +392,10 @@ public class GameManager : SingletonMono<GameManager>
         if (_options[optionId].isCorrect)
         {
             flow.ShowSuccess(_currentCaseId);
+        }
+        else
+        {
+            flow.FlowStateChange(GameFlowState.Death);
         }
     }
 
@@ -507,6 +569,30 @@ public class GameManager : SingletonMono<GameManager>
         }
     }
 
+    /// <summary>
+    /// 通用转场：渐隐（黑屏挡住）→ 执行 duringBlack（切换面板/内容，此时玩家看不到）→ 渐显。
+    /// 用于任意"上一屏内容→下一屏内容"之间需要遮盖硬切的地方。
+    /// </summary>
+    public IEnumerator FadeTransition(Action duringBlack, float fadeOutDuration = 0.5f, float fadeInDuration = 0.5f)
+    {
+        ScreenFader fader = null;
+        yield return GetOrLoadScreenFader(f => fader = f);
+
+        if (fader != null)
+        {
+            yield return fader.FadeOut(fadeOutDuration);
+        }
+
+        duringBlack?.Invoke();
+        yield return null; // 让 SetActive/Hide 等操作先生效一帧，再开始渐显
+
+        if (fader != null)
+        {
+            yield return fader.FadeIn(fadeInDuration);
+        }
+    }
+
+
 
     private void ResetAllGameRuntimeData()
     {
@@ -520,5 +606,70 @@ public class GameManager : SingletonMono<GameManager>
         _gotCaseItemIds.Clear();
 
         _sceneSnapshots.Clear();
+    }
+    // ============ 以下方法仅供 DebugTestHelper 测试使用，不参与正式游戏流程 ============
+
+    /// <summary>【测试专用】无视概率，强制触发一次诅咒</summary>
+    public void DebugForceTriggerDebuff()
+    {
+        StartCoroutine(TriggerRandomDebuffRoutine());
+    }
+
+    /// <summary>【测试专用】直接跳转到指定案件（1001/1002/1003），不需要按顺序打前面的案件</summary>
+    public void DebugJumpToCase(int caseId)
+    {
+        int idx = allCaseIds.IndexOf(caseId);
+        if (idx < 0)
+        {
+            Debug.LogWarning($"DebugJumpToCase: 找不到案件ID {caseId}");
+            return;
+        }
+
+        _currentCaseIndex = idx;
+        _currentCaseId = caseId;
+        _currentWords = DEFAULT_WORDS;
+
+        _items.Clear();
+        _options.Clear();
+        _gotCaseItemIds.Clear();
+        _sceneSnapshots.Clear();
+
+        PrepareCaseData(_currentCaseId);
+        ScenesManager.Instance?.LoadSceneAsync(Scenes.CaseScenePrefix + _currentCaseId, () =>
+        {
+            speakerZone = FindAnyObjectByType<SpeakerZone>();
+            interaction = InteractionController.Instance;
+            interaction.SetSpeakerZone(speakerZone);
+            flow = FlowController.Instance;
+            flow.FlowInit();
+            CaptureSceneSnapshot();
+        });
+        SwitchGameState(GameState.Playing);
+    }
+
+    /// <summary>【测试专用】跳过前面所有案件，直接触发真结局（需要已经进过至少一个案件场景，_demonSpeak 才有数据）</summary>
+    public void DebugForceTrueEnd()
+    {
+        if (flow == null) flow = FlowController.Instance;
+        if (_demonSpeak == null)
+        {
+            Debug.LogWarning("DebugForceTrueEnd: 还没进过任何案件场景，_demonSpeak 数据为空，先按 F1/F2/F3 进一个案件再测。");
+            return;
+        }
+        flow.FlowStateChange(GameFlowState.TrueEnd);
+    }
+
+    /// <summary>【测试专用】强制判定当前案件死亡</summary>
+    public void DebugForceDeath()
+    {
+        if (flow == null) flow = FlowController.Instance;
+        flow.FlowStateChange(GameFlowState.Death);
+    }
+
+    /// <summary>【测试专用】强制判定当前案件成功</summary>
+    public void DebugForceSuccess()
+    {
+        if (flow == null) flow = FlowController.Instance;
+        flow.ShowSuccess(_currentCaseId);
     }
 }

@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine.Events;
@@ -50,6 +50,7 @@ class GameEvents
     //诅咒效果事件
     public const string DebuffEffect = "OnDebuffEffect";
     //案件真相展示
+    public const string CoverClue = "OnCoverClue";
     public const string CaseTruthShow = "OnShowTruth";
 }
 

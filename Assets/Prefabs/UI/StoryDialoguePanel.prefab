@@ -377,7 +377,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   textComponent: {fileID: 1669254216139485654}
-  normalSpeed: 0.3
+  normalSpeed: 1
   punctuationSpeed: 0.5
   autoStart: 0
   lockInputWhileTyping: 1

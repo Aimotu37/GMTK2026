@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -179,9 +180,14 @@ public class FlowController : SingletonMono<FlowController>
             }
             else
             {
-                // 如果屏幕还是黑的（比如刚从开场剧情渐黑切过来），先渐显再开始打字
+                // 先把真正的案件文案设置进去开始打字（此时屏幕如果还是黑的，玩家看不到面板默认内容）
+                bool advance = false;
+                Action onContinue = () => advance = true;
+                panel.ContinueClicked += onContinue;
+                panel.PlayLine(story, null);
                 yield return GameManager.Instance.FadeInScreenIfNeeded();
-                yield return GameManager.Instance.PlayLineAndWaitForContinue(panel, story);
+                yield return new WaitUntil(() => advance);
+                panel.ContinueClicked -= onContinue;
                 UIManager.Instance.HidePanel("story_dialogue_panel");
             }
          }
@@ -235,6 +241,10 @@ public class FlowController : SingletonMono<FlowController>
             UIManager.Instance.HidePanel("clue_panel");
         }
         InputManager.Instance.SetInputEnabled(true);
+
+        // 线索弹窗完全播完、玩家能重新操作之后，才决定这次要不要触发诅咒，跟线索信息错开成两拍
+        yield return new WaitForSeconds(0.3f);
+        GameManager.Instance.TryTriggerDebuff();
     }
 
     private IEnumerator HandleOptionChose()
@@ -275,6 +285,13 @@ public class FlowController : SingletonMono<FlowController>
             else
             {
                 yield return GameManager.Instance.PlayLineAndWaitForContinue(panel, truth);
+                // 下一案的 HandleStoryPlay（或真结局的 HandleTrueEnd）在内容准备好后自己渐显
+                ScreenFader fader = null;
+                yield return GameManager.Instance.GetOrLoadScreenFader(f => fader = f);
+                if (fader != null)
+                {
+                    yield return fader.FadeOut(0.5f);
+                }
                 UIManager.Instance.HidePanel("story_dialogue_panel");
             }
         }
@@ -315,6 +332,8 @@ public class FlowController : SingletonMono<FlowController>
 
         // TODO: 美术资源到位后调用 panel.SetPortrait(恶魔被击败立绘) / panel.SetBackground(结局背景)
         panel.PlayLine(speak, null);
+        // 内容已经开始打字，如果屏幕还是黑的（从上一步真相弹窗渐黑切过来），这里渐显揭幕
+        yield return GameManager.Instance.FadeInScreenIfNeeded();
     }
 
     private void ShowClueAnimation(string clue)

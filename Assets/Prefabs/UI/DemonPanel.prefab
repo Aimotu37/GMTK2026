@@ -296,7 +296,7 @@ GameObject:
   - component: {fileID: 856702074495442444}
   - component: {fileID: 6975074599213130065}
   m_Layer: 5
-  m_Name: DebuffDesc
+  m_Name: DebuffName
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -349,7 +349,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u6076\u9B54\u7684\u8BC5\u5492\uFF1A\uFF08debuff\u63CF\u8FF0\uFF09"
+  m_text: "\u6076\u9B54\u7684\u8BC5\u5492"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 67d7df3b72251f842a339af08879012e, type: 2}
   m_sharedMaterial: {fileID: -8875459438493448217, guid: 67d7df3b72251f842a339af08879012e, type: 2}
@@ -541,7 +541,7 @@ GameObject:
   m_Component:
   - component: {fileID: 9223086014142909876}
   m_Layer: 5
-  m_Name: DebufDES
+  m_Name: DebufName
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

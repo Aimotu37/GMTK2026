@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -41,7 +41,19 @@ public class CaseBoardPanel : BasePanel
 
         StartCoroutine(RefreshLayoutNextFrame());
     }
+    
+    /// <summary>把已解锁的线索重新盖回未获得状态（恶魔"覆盖线索"诅咒用）</summary>
+    public void CoverClueState(int index)
+    {
+        if (index < 0 || index >= clutItems.Count)
+            return;
 
+        clutItems[index].lockIcon.gameObject.SetActive(true);
+        clutItems[index].clueText.text = string.Empty;
+
+        StartCoroutine(RefreshLayoutNextFrame());
+    }
+    
     public void SetTruthInteractable(bool interactable)
     {
         FindComponent<Button>(TruthButtonName).interactable = interactable;
