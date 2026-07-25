@@ -39,7 +39,8 @@ public class GameManager : SingletonMono<GameManager>
     //对话次数
     private int _currentWords = DEFAULT_WORDS;
     //案件数据相关
-    private List<int> allCaseIds = new List<int>() { 1001, 1002, 1003 };
+    // private List<int> allCaseIds = new List<int>() { 1001, 1002, 1003 };
+    private List<int> allCaseIds = new List<int>() { 1001 };//test
     private int _currentCaseId;
     private int _currentCaseIndex;
     private int _iscurrentCasePassed;
@@ -351,12 +352,37 @@ public class GameManager : SingletonMono<GameManager>
         int index = Random.Range(0, _demonSpeak.demonSpeakDatas.Count);
         return _demonSpeak.demonSpeakDatas[index].defeatSpeak;
     }
-   /* public void DemonDefeatSpeak()
+    /* public void DemonDefeatSpeak()
+     {
+         int index = Random.Range(0, _demonSpeak.demonSpeakDatas.Count);
+         EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, _demonSpeak.demonSpeakDatas[index].defeatSpeak);
+     }
+    原代码*/
+
+    /// <summary>成功还原案件时，让恶魔说一句受伤发言（复用 demon_panel 常驻发言区）</summary>
+    public void DemonHurtSpeak()
     {
+        if (_demonSpeak == null || _demonSpeak.demonSpeakDatas == null || _demonSpeak.demonSpeakDatas.Count == 0) return;
         int index = Random.Range(0, _demonSpeak.demonSpeakDatas.Count);
-        EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, _demonSpeak.demonSpeakDatas[index].defeatSpeak);
+        string speak = _demonSpeak.demonSpeakDatas[index].hurtSpeak;
+        if (!string.IsNullOrEmpty(speak))
+        {
+            EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, speak);
+        }
     }
-   原代码*/
+
+    /// <summary>玩家死亡时，让恶魔说一句嘲讽发言（复用 demon_panel 常驻发言区）</summary>
+    public void DemonMockSpeak()
+    {
+        if (_demonSpeak == null || _demonSpeak.demonSpeakDatas == null || _demonSpeak.demonSpeakDatas.Count == 0) return;
+        int index = Random.Range(0, _demonSpeak.demonSpeakDatas.Count);
+        string speak = _demonSpeak.demonSpeakDatas[index].mockSpeak;
+        if (!string.IsNullOrEmpty(speak))
+        {
+            EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, speak);
+        }
+    }
+
     /// <summary>
     /// 播放开场剧情（恶魔契约对话），整局游戏只在第一次“开始游戏”时播放一次，播完后回调
     /// </summary>
@@ -426,6 +452,61 @@ public class GameManager : SingletonMono<GameManager>
         yield return new WaitUntil(() => advance);
         panel.ContinueClicked -= onContinue;
     }
+
+
+    /// <summary>
+    /// 开场剧情播放完成后调用：渐黑挡住案件一场景加载，再真正进入案件一
+    /// </summary>
+    public void FadeToBlackThenStartNewGame(float fadeDuration = 1.5f)
+    {
+        StartCoroutine(FadeToBlackThenStartNewGameRoutine(fadeDuration));
+    }
+
+    private IEnumerator FadeToBlackThenStartNewGameRoutine(float fadeDuration)
+    {
+        ScreenFader fader = null;
+        yield return GetOrLoadScreenFader(f => fader = f);
+
+        if (fader != null)
+        {
+            yield return fader.FadeOut(fadeDuration);
+        }
+
+        StartNewGame();
+    }
+
+    /// <summary>
+    /// 获取（必要时加载）全屏渐变遮罩，通过回调返回实例（找不到时回调传 null）
+    /// </summary>
+    public IEnumerator GetOrLoadScreenFader(Action<ScreenFader> onReady)
+    {
+        ScreenFader fader = UIManager.Instance.GetPanel<ScreenFader>("screen_fader");
+        if (fader != null)
+        {
+            onReady?.Invoke(fader);
+            yield break;
+        }
+
+        bool faderLoaded = false;
+        UIManager.Instance.ShowPanel<ScreenFader>("screen_fader", E_UILayer.SystemLayer, (p) =>
+        {
+            fader = p;
+            faderLoaded = true;
+        });
+        yield return new WaitUntil(() => faderLoaded);
+        onReady?.Invoke(fader);
+    }
+
+    /// <summary>如果当前屏幕是黑的（渐黑遮罩存在），渐显出来；没有遮罩则什么都不做</summary>
+    public IEnumerator FadeInScreenIfNeeded(float duration = 0.8f)
+    {
+        ScreenFader fader = UIManager.Instance.GetPanel<ScreenFader>("screen_fader");
+        if (fader != null)
+        {
+            yield return fader.FadeIn(duration);
+        }
+    }
+
 
     private void ResetAllGameRuntimeData()
     {

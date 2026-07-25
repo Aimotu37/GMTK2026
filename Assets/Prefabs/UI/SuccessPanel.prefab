@@ -69,8 +69,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u70B9\u51FB\u7A7A\u767D\u5904\u67E5\u770B\u6848\u4EF6\u771F\u76F8"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 0bdda3d25b3e68743a733c1124bb11c0, type: 2}
-  m_sharedMaterial: {fileID: -3898980306881200781, guid: 0bdda3d25b3e68743a733c1124bb11c0, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 67d7df3b72251f842a339af08879012e, type: 2}
+  m_sharedMaterial: {fileID: -8875459438493448217, guid: 67d7df3b72251f842a339af08879012e, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -542,7 +542,7 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u6848\u4EF6\u771F\u76F8"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 0bdda3d25b3e68743a733c1124bb11c0, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 67d7df3b72251f842a339af08879012e, type: 2}
   m_sharedMaterial: {fileID: -3898980306881200781, guid: 0bdda3d25b3e68743a733c1124bb11c0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -606,7 +606,7 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
-  m_hasFontAssetChanged: 0
+  m_hasFontAssetChanged: 1
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1 &7215259823895871930
@@ -676,7 +676,7 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u4E0B\u4E00\u4E2A\u6848\u4EF6"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 0bdda3d25b3e68743a733c1124bb11c0, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: fca1dae76bb36a74f88affbcb3c0a5c4, type: 2}
   m_sharedMaterial: {fileID: -3898980306881200781, guid: 0bdda3d25b3e68743a733c1124bb11c0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -740,7 +740,7 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
-  m_hasFontAssetChanged: 0
+  m_hasFontAssetChanged: 1
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1 &7736631273466849052
@@ -811,8 +811,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u6210\u529F\u8FD8\u539F\u6848\u4EF6"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 0bdda3d25b3e68743a733c1124bb11c0, type: 2}
-  m_sharedMaterial: {fileID: -3898980306881200781, guid: 0bdda3d25b3e68743a733c1124bb11c0, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 67d7df3b72251f842a339af08879012e, type: 2}
+  m_sharedMaterial: {fileID: -8875459438493448217, guid: 67d7df3b72251f842a339af08879012e, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

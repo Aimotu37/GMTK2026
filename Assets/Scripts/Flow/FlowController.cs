@@ -20,6 +20,8 @@ public class FlowController : SingletonMono<FlowController>
     [SerializeField]
     private GameFlowState _currentState;
     public GameFlowState CurrentState => _currentState;
+    /// <summary>当前是否处于"点击空白处继续"的等待状态（成功页看真相 / 死亡页重试）</summary>  
+    public bool IsWaitForClickEmpty => _currentState == GameFlowState.Success || _currentState == GameFlowState.Death;
 
     //流程运行变量
     private float clueDuration = 1.5f;
@@ -63,6 +65,12 @@ public class FlowController : SingletonMono<FlowController>
     {
         _currentCase = caseId;
         FlowStateChange(GameFlowState.Success);
+    }
+
+    /// <summary>成功页点击空白处触发：展示案件真相，读完后自动进入下一案件</summary>
+    public void ShowCaseTruth()
+    {
+        FlowStateChange(GameFlowState.TruthShowing);
     }
 
     public void FlowStateChange(GameFlowState state)
@@ -112,6 +120,7 @@ public class FlowController : SingletonMono<FlowController>
                 // 在成功场景上弹出真相弹窗（由SuccessController处理）
                 // 这里不切场景，只发状态通知
                 //UIManager.Instance.ShowTruthPopup();
+                StartCoroutine(HandleTruthShow());
                 break;
 
             case GameFlowState.Death:
@@ -170,6 +179,8 @@ public class FlowController : SingletonMono<FlowController>
             }
             else
             {
+                // 如果屏幕还是黑的（比如刚从开场剧情渐黑切过来），先渐显再开始打字
+                yield return GameManager.Instance.FadeInScreenIfNeeded();
                 yield return GameManager.Instance.PlayLineAndWaitForContinue(panel, story);
                 UIManager.Instance.HidePanel("story_dialogue_panel");
             }
@@ -235,7 +246,8 @@ public class FlowController : SingletonMono<FlowController>
 
     private IEnumerator HandleSuccess()
     {
-        // 1.成功推理页面
+        // 1.成功推理页面：恶魔受伤发言 + 成功面板
+        GameManager.Instance.DemonHurtSpeak();
         yield return new WaitForSeconds(0.5f);
         UIManager.Instance.ShowPanel<SuccessPanel>("success_panel", E_UILayer.MiddleLayer);
         yield break;
@@ -244,11 +256,35 @@ public class FlowController : SingletonMono<FlowController>
     private IEnumerator HandleTruthShow()
     {
         // 1.展示真相页面
-        yield break;
+        // 展示案件真相文本（复用通用剧情对话框），读完点击继续后自动进入下一案件/真结局
+        UIManager.Instance.HidePanel("success_panel");
+
+        string truth = GameManager.Instance.CurrentCaseData != null
+            ? GameManager.Instance.CurrentCaseData.truthText
+            : null;
+
+        if (!string.IsNullOrEmpty(truth))
+        {
+            StoryDialoguePanel panel = null;
+            yield return GameManager.Instance.GetOrLoadStoryDialoguePanel(p => panel = p);
+
+            if (panel == null)
+            {
+                Debug.LogWarning("HandleTruthShow: 未找到 story_dialogue_panel，无法播放案件真相。");
+            }
+            else
+            {
+                yield return GameManager.Instance.PlayLineAndWaitForContinue(panel, truth);
+                UIManager.Instance.HidePanel("story_dialogue_panel");
+            }
+        }
+
+        GameManager.Instance.NextCase();
     }
 
     private IEnumerator HandleDeath()
     {
+        GameManager.Instance.DemonMockSpeak();
         yield return new WaitForSeconds(0.5f);
         GameManager.Instance.GameOver();
         UIManager.Instance.ShowPanel<DeathPanel>("death_panel", E_UILayer.MiddleLayer);

@@ -396,8 +396,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u672A\u83B7\u5F97\u7EBF\u7D221"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 0bdda3d25b3e68743a733c1124bb11c0, type: 2}
-  m_sharedMaterial: {fileID: -3898980306881200781, guid: 0bdda3d25b3e68743a733c1124bb11c0, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 67d7df3b72251f842a339af08879012e, type: 2}
+  m_sharedMaterial: {fileID: -8875459438493448217, guid: 67d7df3b72251f842a339af08879012e, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
