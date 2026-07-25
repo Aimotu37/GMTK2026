@@ -27,6 +27,8 @@ public class GameManager : SingletonMono<GameManager>
     private DemonSpeakDataSO _demonSpeak;
     private DebuffDataSO _debuff;
 
+    public CaseDataSO CurrentCaseData => _currentCaseData;
+
     private Dictionary<int, ItemData> _items = new Dictionary<int, ItemData>();
     public Dictionary<int, ItemData> Items => _items;
     private Dictionary<int, OptionData> _options = new Dictionary<int, OptionData>();
@@ -103,6 +105,7 @@ public class GameManager : SingletonMono<GameManager>
                 Time.timeScale = 0f;
                 break;
             case GameState.GameVictory:
+                Time.timeScale = 0f;
                 break;
         }
 
@@ -132,7 +135,7 @@ public class GameManager : SingletonMono<GameManager>
 
     public void RetryCurrentCase()
     {
-        flow.FlowInit();
+        _gotCaseItemIds.Clear();
         Scene active = SceneManager.GetActiveScene();
         if (!active.IsValid())
         {
@@ -140,8 +143,6 @@ public class GameManager : SingletonMono<GameManager>
             return;
         }
 
-        // 禁用输入并重置交互器状态
-        if (InputManager.Instance != null) InputManager.Instance.SetInputEnabled(false);
         if (interaction == null) interaction = InteractionController.Instance;
         interaction?.ResetController();
 
@@ -181,13 +182,8 @@ public class GameManager : SingletonMono<GameManager>
 
         // 恢复单局变量并启用输入
         _currentWords = DEFAULT_WORDS;
-        EventManager.Instance.EventTrigger(GameEvents.CountChanged, _currentWords);
-        //需要恢复案件线索板
-        UIManager.Instance.HidePanel("case_board_panel");
-        UIManager.Instance.ShowPanel<CaseBoardPanel>("case_board_panel");
-
-        SwitchGameState(GameState.Playing);
-        if (InputManager.Instance != null) InputManager.Instance.SetInputEnabled(true);
+        flow?.ReSetAllFlowData();
+        flow.FlowInit();
     }
 
     public void NextCase()
@@ -229,7 +225,7 @@ public class GameManager : SingletonMono<GameManager>
 
     public void GameOver()
     {
-        SwitchGameState(GameState.GameOver);
+        //SwitchGameState(GameState.GameOver);
         //1、局内交互锁定
         EventManager.Instance.EventTrigger(GameEvents.GameOver);
     }
@@ -282,7 +278,7 @@ public class GameManager : SingletonMono<GameManager>
         if (_sceneSnapshots.ContainsKey(active.name)) return; // 已有快照不重复捕获
 
         GameObject root = new GameObject($"_SceneSnapshot_{active.name}");
-        //DontDestroyOnLoad(root);
+        DontDestroyOnLoad(root);
 
         // 仅捕获需要恢复的类型，避免克隆单例或管理器
         Item[] items = GameObject.FindObjectsOfType<Item>(true);
@@ -303,7 +299,7 @@ public class GameManager : SingletonMono<GameManager>
         EventManager.Instance.EventTrigger<int>(GameEvents.CountChanged, _currentWords);
         if (_currentWords <= 0)
         {
-            flow.FlowStateChange(GameFlowState.Death);
+            flow.ShowDeath();
         }
         else
         {
@@ -322,10 +318,31 @@ public class GameManager : SingletonMono<GameManager>
         }
     }
 
-    public void DemonSpeak()
+    /// <summary>
+    ///恶魔发言
+    /// </summary>
+    /// <param name="type">1、默认；2、受伤；3、被击败；4、嘲讽</param>
+    public void DemonSpeak(int type)
     {
         int index = Random.Range(0, 3);
-        EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, _demonSpeak.demonSpeakDatas[index].defaultSpeak);
+        print(type);
+        switch (type)
+        {
+            case 1:
+                EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, _demonSpeak.demonSpeakDatas[index].defaultSpeak);
+                break;
+            case 2:
+                EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, _demonSpeak.demonSpeakDatas[index].hurtSpeak);
+                break;
+            case 3:
+                EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, _demonSpeak.demonSpeakDatas[index].defeatSpeak);
+                break;
+            case 4:
+                EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, _demonSpeak.demonSpeakDatas[index].mockSpeak);
+                break;
+            default:
+                break;
+        }
     }
 
     private void ResetAllGameRuntimeData()

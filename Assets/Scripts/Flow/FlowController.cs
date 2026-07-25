@@ -10,7 +10,7 @@ public enum GameFlowState
     CluePopup,        // 线索弹窗展示中（禁止交互）
     OptionChoosing,   // 选项页面
     Success,          // 成功还原
-    TruthShowing,     // 展示真相
+    CaseTruthShowing,     // 展示真相
     Death,            // 死亡
     TrueEnd           // 真结局
 }
@@ -27,7 +27,9 @@ public class FlowController : SingletonMono<FlowController>
     private string _pendingClueText;
     private int _currentCase;
     private Coroutine demonSpeak;
-
+    private bool _isWaitingForClickEmpty;
+    public bool IsWaitForClickEmpty => _isWaitingForClickEmpty;
+    private int demonSpeakType = 1;
 
     public void FlowInit()
     {
@@ -60,7 +62,17 @@ public class FlowController : SingletonMono<FlowController>
         FlowStateChange(GameFlowState.Success);
     }
 
-    public void FlowStateChange(GameFlowState state)
+    public void ShowCaseTruth()
+    {
+        FlowStateChange(GameFlowState.CaseTruthShowing);
+    }
+
+    public void ShowDeath()
+    {
+        FlowStateChange(GameFlowState.Death);
+    }
+
+    private void FlowStateChange(GameFlowState state)
     {
         _currentState = state;
         TransitionTo(state);
@@ -71,9 +83,11 @@ public class FlowController : SingletonMono<FlowController>
         _currentState = GameFlowState.Initiating;
         _pendingClueText = "";
         _currentCase = 0;
+        _isWaitingForClickEmpty = false;
         if (demonSpeak != null)
             StopCoroutine(demonSpeak);
         demonSpeak = null;
+        demonSpeakType = 1;
     }
 
     private void TransitionTo(GameFlowState newState)
@@ -103,10 +117,8 @@ public class FlowController : SingletonMono<FlowController>
                 StartCoroutine(HandleSuccess());
                 break;
 
-            case GameFlowState.TruthShowing:
-                // 在成功场景上弹出真相弹窗（由SuccessController处理）
-                // 这里不切场景，只发状态通知
-                //UIManager.Instance.ShowTruthPopup();
+            case GameFlowState.CaseTruthShowing:
+                StartCoroutine(HandleCaseTruthShow());
                 break;
 
             case GameFlowState.Death:
@@ -121,6 +133,8 @@ public class FlowController : SingletonMono<FlowController>
 
     private IEnumerator HandleFlowInitialize()
     {
+        // 禁用输入并重置交互器状态
+        InputManager.Instance.SetInputEnabled(false);
         UIManager.Instance.HidePanel("main_menu_panel");
         yield return null;
         //需要恢复案件线索板
@@ -130,8 +144,8 @@ public class FlowController : SingletonMono<FlowController>
         UIManager.Instance.ShowPanel<DemonPanel>("demon_panel", E_UILayer.TopLayer, (panel) =>
         {
             EventManager.Instance.EventTrigger(GameEvents.CheckCaseClues, GameManager.Instance.GotCaseItemIds.Count > 0);
-            _currentState = GameFlowState.StoryPlaying;
-            TransitionTo(_currentState);
+            FlowStateChange(GameFlowState.StoryPlaying);
+            InputManager.Instance.SetInputEnabled(true);
         });
     }
 
@@ -145,13 +159,12 @@ public class FlowController : SingletonMono<FlowController>
             yield return null;
         }
         print("播放动画结束");
-        _currentState = GameFlowState.Exploring;
-        TransitionTo(_currentState);
+        FlowStateChange(GameFlowState.Exploring);
     }
 
     private IEnumerator HandleExplore()
     {
-        GameManager.Instance.DemonSpeak();
+        GameManager.Instance.DemonSpeak(demonSpeakType);
         demonSpeak = StartCoroutine(DemonSpeakPeriodically());
         yield break;
     }
@@ -194,6 +207,7 @@ public class FlowController : SingletonMono<FlowController>
             UIManager.Instance.HidePanel("clue_panel");
         }
         InputManager.Instance.SetInputEnabled(true);
+        FlowStateChange(GameFlowState.Exploring);
     }
 
     private IEnumerator HandleOptionChose()
@@ -205,24 +219,57 @@ public class FlowController : SingletonMono<FlowController>
 
     private IEnumerator HandleSuccess()
     {
+        // 恶魔发言修改
+        demonSpeakType = 2;
+        if (demonSpeak != null)
+        {
+            StopCoroutine(demonSpeak);
+        }
+        demonSpeak = StartCoroutine(DemonSpeakPeriodically());
+        yield return null;
         // 1.成功推理页面
-        yield return new WaitForSeconds(0.5f);
-        UIManager.Instance.ShowPanel<SuccessPanel>("success_panel", E_UILayer.MiddleLayer);
-        yield break;
+        bool panelOpened = false;
+        UIManager.Instance.ShowPanel<SuccessPanel>("success_panel", E_UILayer.MiddleLayer, (panel) =>
+        {
+            if (panel != null)
+            {
+                panelOpened = true;
+                _isWaitingForClickEmpty = true;
+            }
+        });
+
+        // 等待面板打开并设置标志完成
+        yield return new WaitUntil(() => panelOpened);
     }
 
-    private IEnumerator HandleTruthShow()
+    private IEnumerator HandleCaseTruthShow()
     {
         // 1.展示真相页面
-        yield break;
+        string truthText = GameManager.Instance.CurrentCaseData.truthText;
+        EventManager.Instance.EventTrigger(GameEvents.CaseTruthShow, truthText);
+        yield return null;
+        _isWaitingForClickEmpty = false;
     }
 
     private IEnumerator HandleDeath()
     {
+        demonSpeakType = 4;
+        if (demonSpeak != null)
+        {
+            StopCoroutine(demonSpeak);
+        }
+        demonSpeak = StartCoroutine(DemonSpeakPeriodically());
         yield return new WaitForSeconds(0.5f);
-        GameManager.Instance.GameOver();
-        UIManager.Instance.ShowPanel<DeathPanel>("death_panel", E_UILayer.MiddleLayer);
-        yield break;
+        bool panelOpened = false;
+        UIManager.Instance.ShowPanel<DeathPanel>("death_panel", E_UILayer.MiddleLayer, (panel) =>
+        {
+            if (panel != null)
+            {
+                panelOpened = true;
+                _isWaitingForClickEmpty = true;
+            }
+        });
+        yield return new WaitUntil(() => panelOpened);
     }
 
     private IEnumerator HandleTrueEnd()
@@ -252,8 +299,7 @@ public class FlowController : SingletonMono<FlowController>
             float t = Mathf.SmoothStep(0, 1, elapsed / demonSpeakInterval);
             yield return null;
         }
-        GameManager.Instance.DemonSpeak();
+        GameManager.Instance.DemonSpeak(demonSpeakType);
         StartCoroutine(DemonSpeakPeriodically());
     }
-
 }

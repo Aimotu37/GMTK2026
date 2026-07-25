@@ -35,11 +35,22 @@ class GameEvents
     public const string GameStateChange = "OnStateChange";
     public const string GameSceneSwitch = "OnSceneSwitch";
     //游戏内事件
+    //发声槽检测事件
     public const string DropItemOnZone = "OnItemOnZone";
+    //计数修改事件
     public const string CountChanged = "OnCountChanged";
+    //案件线索检查
     public const string CheckCaseClues = "OnCheckCaseClues";
+    //还原真相事件
+    public const string ChoseCaseOption = "OnCaseOptionChose";
+    //案件成功还原事件
+    public const string CaseSucceed = "OnCaseScucced";
+    //恶魔自主发言事件
     public const string DemonSpeak = "OnDemonSpeak";
+    //诅咒效果事件
     public const string DebuffEffect = "OnDebuffEffect";
+    //案件真相展示
+    public const string CaseTruthShow = "OnShowTruth";
 }
 
 /// <summary>

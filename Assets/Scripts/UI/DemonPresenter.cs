@@ -13,6 +13,7 @@ public class DemonPresenter : MonoBehaviour
         EventManager.Instance.EventRegister<int>(GameEvents.CountChanged, SetCountValue);
         EventManager.Instance.EventRegister<string>(GameEvents.DemonSpeak, SetDemonSpeak);
         EventManager.Instance.EventRegister<string>(GameEvents.DebuffEffect, SetDebuffDesc);
+        EventManager.Instance.EventRegister<string>(GameEvents.ChoseCaseOption, SetDemonSpeak);
     }
 
     private void Start()
@@ -25,6 +26,7 @@ public class DemonPresenter : MonoBehaviour
         EventManager.Instance.EventUnregister<int>(GameEvents.CountChanged, SetCountValue);
         EventManager.Instance.EventUnregister<string>(GameEvents.DemonSpeak, SetDemonSpeak);
         EventManager.Instance.EventUnregister<string>(GameEvents.DebuffEffect, SetDebuffDesc);
+        EventManager.Instance.EventUnregister<string>(GameEvents.ChoseCaseOption, SetDemonSpeak);
     }
 
     private void SetCountValue(int count)

@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u5E72\u6270debuff\u63D0\u793A\uFF0C\u6076\u9B54\u968F\u673A\u53D1\u8A00"
+  m_text: "\u6211\u5F88\u671F\u5F85\uFF0C\u8FD9\u4E00\u6B21\u53C8\u8981\u4E0A\u6F14\u4EC0\u4E48\u6837\u7684\u95F9\u5267\uFF1F\r"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 0bdda3d25b3e68743a733c1124bb11c0, type: 2}
   m_sharedMaterial: {fileID: -3898980306881200781, guid: 0bdda3d25b3e68743a733c1124bb11c0, type: 2}
@@ -790,7 +790,7 @@ GameObject:
   - component: {fileID: 3319570481334900561}
   - component: {fileID: 8437717166431169714}
   m_Layer: 5
-  m_Name: DemoPanel
+  m_Name: DemonPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
