@@ -72,6 +72,11 @@ public class FlowController : SingletonMono<FlowController>
         FlowStateChange(GameFlowState.Death);
     }
 
+    public void ShowTrueEnd()
+    {
+        FlowStateChange(GameFlowState.TrueEnd);
+    }
+
     private void FlowStateChange(GameFlowState state)
     {
         _currentState = state;

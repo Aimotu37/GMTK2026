@@ -18,8 +18,6 @@ public class GameManager : SingletonMono<GameManager>
     private GameState _currentState = GameState.MainMenu;
     public GameState CurrentState => _currentState;
 
-    public CaseDataSO CurrentCaseData => _currentCaseData;
-
     private const int DEFAULT_WORDS = 4;
 
     //单局游戏变量
@@ -197,7 +195,7 @@ public class GameManager : SingletonMono<GameManager>
     {
         if (IsLastCase())
         {
-            flow.FlowStateChange(GameFlowState.TrueEnd);
+            flow.ShowTrueEnd();
             return;
         }
 
