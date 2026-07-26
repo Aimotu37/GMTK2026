@@ -79,7 +79,7 @@ public sealed class GameBootstrap : MonoBehaviour
         State = BootstrapState.Ready;
         _waitingForMainMenu = true;
         //EventCenterMgr.Instance.EventRegister<string>(GameEvents.SceneLoaded, HandleSceneLoaded);
-        _loadingView.ShowSceneLoading(Scenes.MainMenuSceneName);
+        _loadingView.ShowSceneLoading("主菜单");
         GameManager.Instance.LoadMainMenuImmediately(mainMenuReady =>
         {
             if (mainMenuReady)
