@@ -8,6 +8,8 @@ using UnityEngine.UI;
 
 public class InteractionController : SingletonMono<InteractionController>
 {
+    private SpeakerZone speakerZone;
+
     [SerializeField] private Transform speakerZoneTransform;   // 发声槽的位置（用于磁吸）
     [SerializeField] private Collider2D speakerZoneCollider;   // 发声槽的碰撞体（用于检测）
     [SerializeField] private LayerMask speakerZoneLayerMask;   // 或者用 Layer 检测
@@ -35,7 +37,32 @@ public class InteractionController : SingletonMono<InteractionController>
 
     public void Update()
     {
-        // ★ 第一优先级：检查是否点击在 UI 上
+        // 已经开始的拖拽优先处理，避免 UI 拦截导致拖拽更新或松手事件丢失
+        if (isDragging && currentItem != null)
+        {
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(InputManager.Instance.GetMousePosition());
+            mousePos.z = 0f;
+
+            if (!IsPointerInsideDragBounds(mousePos))
+            {
+                RejectCurrentDrop();
+                return;
+            }
+
+            if (InputManager.Instance.GetMouse(0))
+            {
+                OnMouseDragOnObject(mousePos);
+            }
+
+            if (InputManager.Instance.GetMouseUp(0))
+            {
+                OnMouseUpOnObject();
+            }
+
+            return;
+        }
+
+        // 未处于拖拽状态时，UI 只阻止开始新的游戏对象交互
         EventSystem eventSystem = EventSystem.current;
         if (eventSystem != null && eventSystem.IsPointerOverGameObject())
         {
@@ -46,20 +73,9 @@ public class InteractionController : SingletonMono<InteractionController>
             return;  // ← UI 上的点击，直接结束，不处理游戏对象
         }
 
-        // ★ 第二优先级：处理游戏对象点击
         if (InputManager.Instance.GetMouseDown(0))
         {
             OnMouseDownOnObject();
-        }
-
-        if (InputManager.Instance.GetMouse(0))
-        {
-            OnMouseDragOnObject();
-        }
-
-        if (InputManager.Instance.GetMouseUp(0))
-        {
-            OnMouseUpOnObject();
         }
     }
 
@@ -86,6 +102,7 @@ public class InteractionController : SingletonMono<InteractionController>
     //初始化发声槽
     public void SetSpeakerZone(SpeakerZone zone)
     {
+        speakerZone = zone;
         speakerZoneTransform = zone.speakerZoneTransform;
         speakerZoneCollider = zone.speakerZoneCollider;
         speakerZoneLayerMask = zone.speakerZoneLayerMask;
@@ -139,12 +156,22 @@ public class InteractionController : SingletonMono<InteractionController>
 
     public void OnMouseDragOnObject()
     {
-        if (!isDragging || currentItem == null) return;
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(InputManager.Instance.GetMousePosition());
         mousePos.z = 0f;
+        OnMouseDragOnObject(mousePos);
+    }
+
+    private void OnMouseDragOnObject(Vector3 mousePos)
+    {
+        if (!isDragging || currentItem == null) return;
         Vector3 targetPos = mousePos + offset;
         targetPos = ClampPositionToBounds(targetPos);
         currentItem.OnDragUpdate(targetPos);
+    }
+
+    private bool IsPointerInsideDragBounds(Vector3 mouseWorldPos)
+    {
+        return dragBoundsCollider == null || dragBoundsCollider.OverlapPoint(mouseWorldPos);
     }
 
     public void OnMouseUpOnObject()
@@ -207,6 +234,7 @@ public class InteractionController : SingletonMono<InteractionController>
         if (currentItem == null) return;
         AudioManager.Instance.StartPlaySound("sfx_04_05_06", false);
         currentItem.OnDragEnd(true);
+        speakerZone?.PlayAcceptedDropFeedback();
         currentItem = null;
         isDragging = false;
     }

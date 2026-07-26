@@ -11,6 +11,9 @@ public class DemonPanel : BasePanel
     private TMP_Text countText;
     private TMP_Text debuff;
     private Image debuffIcon;
+    private CountDecreaseFeedback countFeedback;
+    private int displayedCount;
+    private bool hasDisplayedCount;
 
     public Action<int> OnChangeCount;
     public Action<string> OnDemonSpeak;
@@ -25,17 +28,25 @@ public class DemonPanel : BasePanel
         OnDebuff += SetDebuff;
     }
 
-    void Start()
+    protected override void Awake()
     {
+        base.Awake();
         demonIcon = FindComponent<Image>("Demon");
         demonSpeakText = FindComponent<TMP_Text>("DemonSpeakText");
         countText = FindComponent<TMP_Text>("Number");
         debuff = FindComponent<TMP_Text>("DebuffName");
         debuffIcon = FindComponent<Image>("DebuffIcon");
         typewriter = GetComponent<TypewriterEffect>();
+        countFeedback = GetComponent<CountDecreaseFeedback>();
+
+        if (countText != null)
+        {
+            hasDisplayedCount = int.TryParse(countText.text, out displayedCount);
+            countFeedback?.Initialize(countText);
+        }
     }
 
-    void OnDestroy()
+    void OnDisable()
     {
         OnChangeCount -= SetCountText;
         OnDemonSpeak -= SetDemonSpeak;
@@ -44,7 +55,31 @@ public class DemonPanel : BasePanel
 
     private void SetCountText(int count)
     {
-        countText.text = count.ToString();
+        if (countText == null)
+        {
+            return;
+        }
+
+        bool animate = CountFeedbackPolicy.ShouldAnimate(
+            hasDisplayedCount, displayedCount, count);
+        int oldValue = displayedCount;
+        displayedCount = count;
+        hasDisplayedCount = true;
+
+        if (countFeedback == null)
+        {
+            countText.text = count.ToString();
+            return;
+        }
+
+        if (animate)
+        {
+            countFeedback.PlayDecrease(oldValue, count);
+        }
+        else
+        {
+            countFeedback.SetImmediate(count);
+        }
     }
 
     private void SetDemonSpeak(string text)

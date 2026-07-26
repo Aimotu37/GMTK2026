@@ -165,11 +165,11 @@ public class FlowController : SingletonMono<FlowController>
     private IEnumerator HandleStoryPlay(float duration)
     {
         //播放剧情动画：读取当前案件的剧情文本，通过恶魔面板打字机播放
-        string story = GameManager.Instance.CurrentCaseData != null
-            ? GameManager.Instance.CurrentCaseData.storyText
+        List<StoryDialogueLineData> storyLines = GameManager.Instance.CurrentCaseData != null
+            ? GameManager.Instance.CurrentCaseData.storyLines
             : null;
 
-        if (string.IsNullOrEmpty(story))
+        if (storyLines == null || storyLines.Count == 0)
         {
             // 没有配置剧情文本时，先完成探索状态初始化，再揭开黑屏。
             FlowStateChange(GameFlowState.Exploring);
@@ -191,15 +191,26 @@ public class FlowController : SingletonMono<FlowController>
             }
             else
             {
-                // 先把真正的案件文案设置进去开始打字（此时屏幕如果还是黑的，玩家看不到面板默认内容）
-                bool advance = false;
-                Action onContinue = () => advance = true;
-                panel.ContinueClicked += onContinue;
-                panel.PlayLine(story, null);
-                yield return GameManager.Instance.FadeInScreenIfNeeded();
-                yield return new WaitUntil(() => advance);
-                panel.ContinueClicked -= onContinue;
-                UIManager.Instance.HidePanel("story_dialogue_panel");
+                bool playedAnyLine = false;
+                foreach (StoryDialogueLineData line in storyLines)
+                {
+                    if (line == null || string.IsNullOrEmpty(line.text)) continue;
+                    yield return GameManager.Instance.PlayLineAndWaitForContinue(
+                        panel,
+                        line,
+                        revealScreen: !playedAnyLine);
+                    playedAnyLine = true;
+                }
+
+                if (!playedAnyLine)
+                {
+                    yield return GameManager.Instance.HideStoryDialoguePanelWithFade();
+                    FlowStateChange(GameFlowState.Exploring);
+                    yield return GameManager.Instance.FadeInScreenIfNeeded();
+                    yield break;
+                }
+
+                yield return GameManager.Instance.HideStoryDialoguePanelWithFade();
             }
         }
         FlowStateChange(GameFlowState.Exploring);
@@ -281,11 +292,11 @@ public class FlowController : SingletonMono<FlowController>
         // 展示案件真相文本（复用通用剧情对话框），读完点击继续后自动进入下一案件/真结局
         UIManager.Instance.HidePanel("success_panel");
 
-        string truth = GameManager.Instance.CurrentCaseData != null
-            ? GameManager.Instance.CurrentCaseData.truthText
+        List<StoryDialogueLineData> truthLines = GameManager.Instance.CurrentCaseData != null
+            ? GameManager.Instance.CurrentCaseData.truthLines
             : null;
 
-        if (!string.IsNullOrEmpty(truth))
+        if (truthLines != null && truthLines.Count > 0)
         {
             StoryDialoguePanel panel = null;
             yield return GameManager.Instance.GetOrLoadStoryDialoguePanel(p => panel = p);
@@ -296,7 +307,11 @@ public class FlowController : SingletonMono<FlowController>
             }
             else
             {
-                yield return GameManager.Instance.PlayLineAndWaitForContinue(panel, truth);
+                foreach (StoryDialogueLineData line in truthLines)
+                {
+                    if (line == null || string.IsNullOrEmpty(line.text)) continue;
+                    yield return GameManager.Instance.PlayLineAndWaitForContinue(panel, line);
+                }
             }
         }
 

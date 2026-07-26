@@ -40,8 +40,8 @@ public class AudioManager : SingletonMono<AudioManager>
     private AudioMixerGroup _interactionMixerGroup;
     private AudioMixerGroup _resultMixerGroup;
 
-    private float _bgmVolume = 0.5f;
-    private float _sfxVolume = 0.5f;
+    private float _bgmVolume = 0.4f;
+    private float _sfxVolume = 0.4f;
     private bool _isInitialized;
     private bool _initFailed;
     private bool _audioRootLoad;

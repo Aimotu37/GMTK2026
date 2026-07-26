@@ -604,7 +604,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, _demonSpeak.demonSpeakDatas[index].defaultSpeak);
     }
     /// <summary>随机取一条恶魔被击败发言（真结局用），不触发事件，交给调用方自行展示</summary>
-    public string GetRandomDefeatSpeak()
+    public StoryDialogueLineData GetRandomDefeatDialogue()
     {
         DemonSpeakDataSO demonSpeak = _demonSpeak;
         if (demonSpeak == null && DataManager.Instance != null)
@@ -614,18 +614,11 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
 
         if (demonSpeak == null || demonSpeak.demonSpeakDatas == null || demonSpeak.demonSpeakDatas.Count == 0)
         {
-            return string.Empty;
+            return null;
         }
         int index = Random.Range(0, demonSpeak.demonSpeakDatas.Count);
-        return demonSpeak.demonSpeakDatas[index].defeatSpeak;
+        return demonSpeak.demonSpeakDatas[index].defeatDialogue;
     }
-    /* public void DemonDefeatSpeak()
-     {
-         int index = Random.Range(0, _demonSpeak.demonSpeakDatas.Count);
-         EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, _demonSpeak.demonSpeakDatas[index].defeatSpeak);
-     }
-    原代码*/
-
     /// <summary>成功还原案件时，让恶魔说一句受伤发言（复用 demon_panel 常驻发言区）</summary>
     public void DemonHurtSpeak()
     {
@@ -656,7 +649,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
     public void PlayOpeningStory(Action onComplete)
     {
         DemonSpeakDataSO demonSpeak = DataManager.Instance.GetDemonSpeak();
-        List<string> lines = demonSpeak != null ? demonSpeak.openingLines : null;
+        List<StoryDialogueLineData> lines = demonSpeak != null ? demonSpeak.openingLines : null;
         if (lines == null || lines.Count == 0)
         {
             onComplete?.Invoke();
@@ -665,7 +658,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         StartCoroutine(PlayOpeningLines(lines, onComplete));
     }
 
-    private IEnumerator PlayOpeningLines(List<string> lines, Action onComplete)
+    private IEnumerator PlayOpeningLines(List<StoryDialogueLineData> lines, Action onComplete)
     {
         StoryDialoguePanel panel = null;
         yield return GetOrLoadStoryDialoguePanel(p => panel = p);
@@ -678,9 +671,9 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         }
 
         bool revealOnNextLine = true;
-        foreach (string line in lines)
+        foreach (StoryDialogueLineData line in lines)
         {
-            if (string.IsNullOrEmpty(line)) continue;
+            if (line == null || string.IsNullOrEmpty(line.text)) continue;
             yield return PlayLineAndWaitForContinue(panel, line, revealOnNextLine);
             revealOnNextLine = false;
         }
@@ -695,8 +688,8 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
 
     private IEnumerator PlayEndingStoryRoutine(Action onComplete)
     {
-        string endingLine = GetRandomDefeatSpeak();
-        if (string.IsNullOrEmpty(endingLine))
+        StoryDialogueLineData endingLine = GetRandomDefeatDialogue();
+        if (endingLine == null || string.IsNullOrEmpty(endingLine.text))
         {
             Debug.LogWarning("PlayEndingStory: 未找到有效的结局台词，返回主菜单。");
             onComplete?.Invoke();
@@ -713,7 +706,6 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         }
 
         yield return PlayLineAndWaitForContinue(panel, endingLine, revealScreen: true);
-        UIManager.Instance.HidePanel("story_dialogue_panel");
         onComplete?.Invoke();
     }
 
@@ -739,13 +731,26 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         onReady?.Invoke(panel);
     }
 
+    public IEnumerator HideStoryDialoguePanelWithFade(float duration = 0.25f)
+    {
+        StoryDialoguePanel panel = UIManager.Instance.GetPanel<StoryDialoguePanel>("story_dialogue_panel");
+        if (panel == null) yield break;
+
+        yield return panel.FadeOut(duration);
+        if (UIManager.Instance.GetPanel<StoryDialoguePanel>("story_dialogue_panel") == panel)
+        {
+            UIManager.Instance.HidePanel("story_dialogue_panel");
+        }
+    }
+
     /// <summary>播完一句并等玩家点箭头推进（点击时若还在打字会先跳字，需要再点一次才会推进）</summary>
-    public IEnumerator PlayLineAndWaitForContinue(StoryDialoguePanel panel, string line, bool revealScreen = false)
+    public IEnumerator PlayLineAndWaitForContinue(StoryDialoguePanel panel, StoryDialogueLineData line, bool revealScreen = false)
     {
         bool advance = false;
         Action onContinue = () => advance = true;
         panel.ContinueClicked += onContinue;
         panel.PlayLine(line, null);
+        yield return panel.FadeIn();
         if (revealScreen)
         {
             yield return FadeInScreenIfNeeded();
