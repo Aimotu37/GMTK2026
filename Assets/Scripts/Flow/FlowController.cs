@@ -328,9 +328,18 @@ public class FlowController : SingletonMono<FlowController>
         }
 
         // TODO: 美术资源到位后调用 panel.SetPortrait(恶魔被击败立绘) / panel.SetBackground(结局背景)
+        bool advance = false;
+        Action onContinue = () => advance = true;
+        panel.ContinueClicked += onContinue;
         panel.PlayLine(speak, null);
         // 内容已经开始打字，如果屏幕还是黑的（从上一步真相弹窗渐黑切过来），这里渐显揭幕
         yield return GameManager.Instance.FadeInScreenIfNeeded();
+        yield return new WaitUntil(() => advance);
+        panel.ContinueClicked -= onContinue;
+
+        // 播完等玩家点一下继续，再收起对话框、转场回主菜单
+        UIManager.Instance.HidePanel("story_dialogue_panel");
+        GameManager.Instance.LoadMainMenu();
     }
 
     private void ShowClueAnimation(string clue)
