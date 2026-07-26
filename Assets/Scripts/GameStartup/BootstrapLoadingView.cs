@@ -41,7 +41,7 @@ public sealed class BootstrapLoadingView : MonoBehaviour
         Progress = 0f;
         FailureMessage = string.Empty;
         SetProgressFill(0f);
-        SetText(_statusText, "Starting game...");
+        SetText(_statusText, "正在开始游戏...");
         SetText(_progressText, "0%");
         SetFailureVisible(false);
     }
@@ -57,7 +57,7 @@ public sealed class BootstrapLoadingView : MonoBehaviour
         CurrentModuleName = progress.ModuleName;
         Progress = Mathf.Clamp01(progress.Progress);
         SetProgressFill(Progress);
-        SetText(_statusText, $"Initializing {CurrentModuleName}...");
+        SetText(_statusText, $"初始化 {CurrentModuleName}...");
         SetText(_progressText, $"{Mathf.RoundToInt(Progress * 100f)}%");
     }
 
@@ -65,7 +65,7 @@ public sealed class BootstrapLoadingView : MonoBehaviour
     {
         Show();
         CurrentModuleName = sceneName;
-        SetText(_statusText, $"Loading {sceneName}...");
+        SetText(_statusText, $"加载 {sceneName}...");
         SetProgressFill(1f);
         SetText(_progressText, "100%");
     }
