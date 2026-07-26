@@ -9,11 +9,14 @@ public class CaseBoardPanel : BasePanel
 {
 
     private const string TruthButtonName = "RestoreTruthButton";
+    private const string SettingButtonName = "SettingButton";
+
     [SerializeField] private Transform content;
     private List<ClueItem> clutItems = new List<ClueItem>();
     private TMP_Text _caseNameText;
 
     public event Action OnTruthClicked;
+    public event Action OnSettingClicked;
 
     protected override void OnButtonClick(string buttonName)
     {
@@ -21,6 +24,9 @@ public class CaseBoardPanel : BasePanel
         {
             case TruthButtonName:
                 OnTruthClicked?.Invoke();
+                break;
+            case SettingButtonName:
+                OnSettingClicked?.Invoke();
                 break;
         }
     }

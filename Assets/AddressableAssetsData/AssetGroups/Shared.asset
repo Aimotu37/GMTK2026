@@ -32,6 +32,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 43c5565767f451244a061d03730b5f02
+    m_Address: audio/sfx/sfx_02_11_14
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 44858233367ca6a4e8a1db115a6f5593
     m_Address: ui/screen_fader
     m_ReadOnly: 0
@@ -42,8 +47,28 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 75bc2da2f7d36cd4884b98ea9a299924
+    m_Address: audio/sfx/sfx_13
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 95e29370db9c3f94f933e4e47b748366
+    m_Address: audio/bgm/loop
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9dca02343c04ed74cbc2ad8fceefbe5a
     m_Address: ui/death_panel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b3299a278ba89ee47a627cd40715e50e
+    m_Address: audio/sfx/sfx_03_08
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b38d628366cfcb941bb16b28cde028d2
+    m_Address: audio/bgm/ending
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -57,8 +82,23 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c4648689682154344b0f8eeeb32d0f33
+    m_Address: audio/sfx/sfx_01_07_09
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cd1e2191052fa78459c70df1092adce3
+    m_Address: audio/sfx/sfx_10_12
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e8f76831dbaa9564f8519974fd842890
     m_Address: ui/story_dialogue_panel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f8b9bb02ceb19e9479d1f85afde5c501
+    m_Address: audio/sfx/sfx_04_05_06
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -18,20 +18,20 @@ public enum GameFlowState
 
 public class FlowController : SingletonMono<FlowController>
 {
-    [SerializeField]
-    private GameFlowState _currentState;
-    public GameFlowState CurrentState => _currentState;
-    /// <summary>当前是否处于"点击空白处继续"的等待状态（成功页看真相 / 死亡页重试）</summary>  
-    public bool IsWaitForClickEmpty => _currentState == GameFlowState.Success || _currentState == GameFlowState.CaseFail;
-
     //流程运行变量
+    //运行时保存变量
+
+    //运行时不需保存变量，在案例启动时初始化
+    private GameFlowState _currentState;
+    private int _currentCase;
+    private bool _skipIntroStory;
+    public bool IsWaitForClickEmpty => _currentState == GameFlowState.Success || _currentState == GameFlowState.CaseFail;
     private float clueDuration = 1.5f;
     private float demonSpeakInterval = 10.0f;
     private string _pendingClueText;
-    private int _currentCase;
     private Coroutine demonSpeak;
-    private bool _skipIntroStory;
 
+    public GameFlowState CurrentState => _currentState;
 
     /// <summary>
     /// 初始化流程；playIntroStory 为 false 时跳过案件剧情播放，直接进入探索（用于重试当前案件）
@@ -135,16 +135,31 @@ public class FlowController : SingletonMono<FlowController>
     {
         UIManager.Instance.HidePanel("main_menu_panel");
         yield return null;
+
+        bool caseBoardRequestCompleted = false;
+        bool demonRequestCompleted = false;
+
         //需要恢复案件线索板
         UIManager.Instance.HidePanel("case_board_panel");
-        UIManager.Instance.ShowPanel<CaseBoardPanel>("case_board_panel");
-        UIManager.Instance.HidePanel("demon_panel");
-        UIManager.Instance.ShowPanel<DemonPanel>("demon_panel", E_UILayer.TopLayer, (panel) =>
+        UIManager.Instance.ShowPanel<CaseBoardPanel>("case_board_panel", E_UILayer.MiddleLayer, panel =>
         {
-            EventManager.Instance.EventTrigger(GameEvents.CheckCaseClues, GameManager.Instance.GotCaseItemIds.Count > 0);
-            _currentState = _skipIntroStory ? GameFlowState.Exploring : GameFlowState.StoryPlaying;
-            TransitionTo(_currentState);
+            caseBoardRequestCompleted = true;
         });
+        UIManager.Instance.HidePanel("demon_panel");
+        UIManager.Instance.ShowPanel<DemonPanel>("demon_panel", E_UILayer.TopLayer, panel =>
+        {
+            demonRequestCompleted = true;
+        });
+
+        yield return new WaitUntil(() => caseBoardRequestCompleted && demonRequestCompleted);
+        EventManager.Instance.EventTrigger(GameEvents.CheckCaseClues, GameManager.Instance.GotCaseItemIds.Count > 0);
+        _currentState = _skipIntroStory ? GameFlowState.Exploring : GameFlowState.StoryPlaying;
+        TransitionTo(_currentState);
+
+        if (_skipIntroStory)
+        {
+            yield return GameManager.Instance.FadeInScreenIfNeeded();
+        }
     }
 
     private IEnumerator HandleStoryPlay(float duration)
@@ -156,13 +171,10 @@ public class FlowController : SingletonMono<FlowController>
 
         if (string.IsNullOrEmpty(story))
         {
-            // 没有配置剧情文本时，退回到纯等待，避免卡流程
-            float elapsed = 0f;
-            while (elapsed < duration)
-            {
-                elapsed += Time.deltaTime;
-                yield return null;
-            }
+            // 没有配置剧情文本时，先完成探索状态初始化，再揭开黑屏。
+            FlowStateChange(GameFlowState.Exploring);
+            yield return GameManager.Instance.FadeInScreenIfNeeded();
+            yield break;
         }
         //print("播放动画结束");
         else
@@ -173,6 +185,9 @@ public class FlowController : SingletonMono<FlowController>
             if (panel == null)
             {
                 Debug.LogWarning("HandleStoryPlay: 未找到 story_dialogue_panel，无法播放剧情文本。");
+                FlowStateChange(GameFlowState.Exploring);
+                yield return GameManager.Instance.FadeInScreenIfNeeded();
+                yield break;
             }
             else
             {
@@ -205,7 +220,7 @@ public class FlowController : SingletonMono<FlowController>
 
         bool requestCompleted = false;
         bool panelOpened = false;
-        BasePanel tempPanel = new BasePanel();
+        BasePanel tempPanel = null;
 
         UIManager.Instance.ShowPanel<CluePanel>("clue_panel", E_UILayer.MiddleLayer, (panel) =>
         {
@@ -282,14 +297,6 @@ public class FlowController : SingletonMono<FlowController>
             else
             {
                 yield return GameManager.Instance.PlayLineAndWaitForContinue(panel, truth);
-                // 下一案的 HandleStoryPlay（或真结局的 HandleTrueEnd）在内容准备好后自己渐显
-                ScreenFader fader = null;
-                yield return GameManager.Instance.GetOrLoadScreenFader(f => fader = f);
-                if (fader != null)
-                {
-                    yield return fader.FadeOut(0.5f);
-                }
-                UIManager.Instance.HidePanel("story_dialogue_panel");
             }
         }
 
@@ -307,39 +314,10 @@ public class FlowController : SingletonMono<FlowController>
 
     private IEnumerator HandleTrueEnd()
     {
-
-        // 结局页面复用通用剧情对话框，播放恶魔被击败发言（DemonSpeakConfig.DefeatSpeak）
         UIManager.Instance.HidePanel("case_board_panel");
         UIManager.Instance.HidePanel("demon_panel");
-
-        string speak = GameManager.Instance.GetRandomDefeatSpeak();
-        if (string.IsNullOrEmpty(speak))
-        {
-            yield break;
-        }
-
-        StoryDialoguePanel panel = null;
-        yield return GameManager.Instance.GetOrLoadStoryDialoguePanel(p => panel = p);
-
-        if (panel == null)
-        {
-            Debug.LogWarning("HandleTrueEnd: 未找到 story_dialogue_panel，无法播放结局发言。");
-            yield break;
-        }
-
-        // TODO: 美术资源到位后调用 panel.SetPortrait(恶魔被击败立绘) / panel.SetBackground(结局背景)
-        bool advance = false;
-        Action onContinue = () => advance = true;
-        panel.ContinueClicked += onContinue;
-        panel.PlayLine(speak, null);
-        // 内容已经开始打字，如果屏幕还是黑的（从上一步真相弹窗渐黑切过来），这里渐显揭幕
-        yield return GameManager.Instance.FadeInScreenIfNeeded();
-        yield return new WaitUntil(() => advance);
-        panel.ContinueClicked -= onContinue;
-
-        // 播完等玩家点一下继续，再收起对话框、转场回主菜单
-        UIManager.Instance.HidePanel("story_dialogue_panel");
-        GameManager.Instance.LoadMainMenu();
+        GameManager.Instance.LoadEndingScene();
+        yield break;
     }
 
     private void ShowClueAnimation(string clue)

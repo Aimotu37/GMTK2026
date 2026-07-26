@@ -15,17 +15,35 @@ public enum GameState
     GameOver,
     GameVictory
 }
-public class GameManager : SingletonMono<GameManager>
+public class GameManager : SingletonMono<GameManager>, ISaveable
 {
-    private GameState _currentState = GameState.MainMenu;
-    public GameState CurrentState => _currentState;
-
-    public CaseDataSO CurrentCaseData => _currentCaseData;
-
+    public string SavedId => "Game_Saved";
     private const int DEFAULT_WORDS = 4;
-
+    private List<int> allCaseIds = new List<int>() { 1001, 1002, 1003 };
     //每次发言后触发诅咒的概率（0~1），不是每次都触发
     private const float DEBUFF_TRIGGER_CHANCE = 0.2f;
+    //游戏运行变量
+    //运行时保存变量
+    //案件数据相关
+    private int _currentCaseId;
+    private int _currentCaseIndex;
+    private int _iscurrentCasePassed;
+    private bool _gameCompleted;
+
+    //运行时不保存变量
+    //对话次数
+    private int _currentWords;
+    private GameState _currentState;
+    private int latestItemId;
+    private int _currentDebuffId;
+    //线索相关
+    private List<int> _gotCaseItemIds = new List<int>();
+
+    public GameState CurrentState => _currentState;
+    public List<int> GotCaseItemIds => _gotCaseItemIds;
+    public CaseDataSO CurrentCaseData => _currentCaseData;
+    public int LatestItemId => latestItemId;
+    public int CurrentCaseIndex => _currentCaseIndex;
 
     //单局游戏变量
     private CaseDataSO _currentCaseData;
@@ -35,26 +53,11 @@ public class GameManager : SingletonMono<GameManager>
     private DebuffDataSO _debuff;
 
     private Dictionary<int, ItemData> _items = new Dictionary<int, ItemData>();
-    public Dictionary<int, ItemData> Items => _items;
     private Dictionary<int, OptionData> _options = new Dictionary<int, OptionData>();
+
+    public Dictionary<int, ItemData> Items => _items;
     public Dictionary<int, OptionData> Options => _options;
 
-    //对话次数
-    private int _currentWords = DEFAULT_WORDS;
-    //案件数据相关
-    private List<int> allCaseIds = new List<int>() { 1001, 1002, 1003 };
-    //private List<int> allCaseIds = new List<int>() { 1001 };//test
-    private int _currentCaseId;
-    private int _currentCaseIndex;
-    public int CurrentCaseIndex => _currentCaseIndex;
-    private int _iscurrentCasePassed;
-    //线索相关
-    private List<int> _gotCaseItemIds = new List<int>();
-    public List<int> GotCaseItemIds => _gotCaseItemIds;
-    private int latestItemId;
-    public int LatestItemId => latestItemId;
-    //当前buff
-    private int _currentDebuffId;
 
     private bool _isCorrect;
 
@@ -65,6 +68,7 @@ public class GameManager : SingletonMono<GameManager>
 
     // 场景快照：按场景名保存一个用于恢复的禁用克隆根对象
     private Dictionary<string, GameObject> _sceneSnapshots = new Dictionary<string, GameObject>();
+    private bool _isSceneTransitioning;
 
     //初始化变量
     private bool _isInitialized;
@@ -89,6 +93,9 @@ public class GameManager : SingletonMono<GameManager>
         else
         {
             _isInitialized = true;
+            _currentState = GameState.MainMenu;
+            _currentWords = DEFAULT_WORDS;
+            (this as ISaveable).RegisterSaveable();
             Debug.Log(this.name + " Initialization Successful.");
         }
     }
@@ -114,12 +121,6 @@ public class GameManager : SingletonMono<GameManager>
             case GameState.GameVictory:
                 break;
         }
-
-        if (InputManager.Instance != null)
-        {
-            bool enableInput = targetState == GameState.Playing;
-            InputManager.Instance.SetInputEnabled(enableInput);
-        }
     }
 
     //游戏行为
@@ -127,36 +128,52 @@ public class GameManager : SingletonMono<GameManager>
     {
         ResetAllGameRuntimeData();
         PrepareCaseData(_currentCaseId);
-        ScenesManager.Instance?.LoadSceneAsync(Scenes.CaseScenePrefix + _currentCaseId, () =>
+        string sceneName = Scenes.CaseScenePrefix + _currentCaseId;
+        ScenesManager.Instance?.SwitchGameScene(sceneName, sceneLoaded =>
         {
+            if (!sceneLoaded)
+            {
+                Debug.LogError($"Failed to load first case scene {sceneName}.");
+                RecoverToMainMenuWhileBlack();
+                return;
+            }
+
             speakerZone = FindAnyObjectByType<SpeakerZone>();
             interaction = InteractionController.Instance;
-            interaction.SetSpeakerZone(speakerZone);
             flow = FlowController.Instance;
+            if (speakerZone == null || interaction == null || flow == null)
+            {
+                Debug.LogError($"First case scene {sceneName} is missing required gameplay objects.");
+                RecoverToMainMenuWhileBlack();
+                return;
+            }
+
+            interaction.SetSpeakerZone(speakerZone);
+            EndSceneTransition();
             flow.FlowInit();
             CaptureSceneSnapshot();
+            SaveManager.Instance.SaveGameData();
+            SwitchGameState(GameState.Playing);
         });
-        SwitchGameState(GameState.Playing);
     }
 
-    public void RetryCurrentCase()
+    public bool RetryCurrentCase()
     {
-        _gotCaseItemIds.Clear();
         Scene active = SceneManager.GetActiveScene();
         if (!active.IsValid())
         {
             Debug.LogWarning("RetryCurrentCase: 无效的活动场景。");
-            return;
+            return false;
         }
-
-        // 禁用输入并重置交互器状态
-        if (InputManager.Instance != null) InputManager.Instance.SetInputEnabled(false);
-        if (interaction == null) interaction = InteractionController.Instance;
-        interaction?.ResetController();
 
         // 如果没有快照则退回到场景重载作为兜底
         if (!_sceneSnapshots.TryGetValue(active.name, out var snapshotRoot) || snapshotRoot == null)
         {
+            _gotCaseItemIds.Clear();
+            if (InputManager.Instance != null) InputManager.Instance.SetInputEnabled(false);
+            if (interaction == null) interaction = InteractionController.Instance;
+            interaction?.ResetController();
+
             Debug.LogWarning($"RetryCurrentCase: 场景 {active.name} 没有快照，使用场景重载作为回退。");
             ScenesManager.Instance?.LoadSceneAsync(active.name, () =>
             {
@@ -166,8 +183,32 @@ public class GameManager : SingletonMono<GameManager>
                 flow = FlowController.Instance;
                 _currentWords = DEFAULT_WORDS;
             });
-            return;
+            return false;
         }
+
+        if (!TryBeginSceneTransition()) return true;
+        StartCoroutine(RetryCurrentCaseRoutine(active, snapshotRoot));
+        return true;
+    }
+
+    private IEnumerator RetryCurrentCaseRoutine(Scene active, GameObject snapshotRoot)
+    {
+        ScreenFader fader = null;
+        yield return GetOrLoadScreenFader(value => fader = value);
+        if (fader == null)
+        {
+            Debug.LogError("RetryCurrentCase failed to load the screen fader.");
+            EndSceneTransition();
+            yield break;
+        }
+
+        yield return fader.FadeOut(0.5f);
+        UIManager.Instance.HidePanel("death_panel");
+
+        _gotCaseItemIds.Clear();
+        if (InputManager.Instance != null) InputManager.Instance.SetInputEnabled(false);
+        if (interaction == null) interaction = InteractionController.Instance;
+        interaction?.ResetController();
 
         // 销毁当前场景中可交互对象（Item、SpeakerZone），以便用快照恢复
         Item[] items = GameObject.FindObjectsOfType<Item>(true);
@@ -191,6 +232,7 @@ public class GameManager : SingletonMono<GameManager>
         // 恢复单局变量并启用输入
         _currentWords = DEFAULT_WORDS;
         EventManager.Instance.EventTrigger(GameEvents.CountChanged, _currentWords);
+        EndSceneTransition();
         flow.FlowInit(playIntroStory: false);
         SwitchGameState(GameState.Playing);
         if (InputManager.Instance != null) InputManager.Instance.SetInputEnabled(true);
@@ -201,12 +243,39 @@ public class GameManager : SingletonMono<GameManager>
         return _currentCaseIndex >= allCaseIds.Count - 1;
     }
 
+    public bool IsValidCaseId(int caseId)
+    {
+        return allCaseIds.Contains(caseId);
+    }
+
     public void NextCase()
     {
+        if (!TryBeginSceneTransition()) return;
+        StartCoroutine(NextCaseRoutine());
+    }
+
+    private IEnumerator NextCaseRoutine()
+    {
+        ScreenFader fader = null;
+        yield return GetOrLoadScreenFader(value => fader = value);
+        if (fader == null)
+        {
+            Debug.LogError("NextCase failed to load the screen fader.");
+            EndSceneTransition();
+            yield break;
+        }
+
+        yield return fader.FadeOut(0.5f);
+        UIManager.Instance.HidePanel("story_dialogue_panel");
+        UIManager.Instance.HidePanel("success_panel");
+
         if (IsLastCase())
         {
+            _gameCompleted = true;
+            SaveManager.Instance.SaveGameData();
+            EndSceneTransition();
             flow.FlowStateChange(GameFlowState.TrueEnd);
-            return;
+            yield break;
         }
 
         _currentCaseIndex += 1;
@@ -220,14 +289,31 @@ public class GameManager : SingletonMono<GameManager>
 
         _sceneSnapshots.Clear();
         PrepareCaseData(_currentCaseId);
-        ScenesManager.Instance?.LoadSceneAsync(Scenes.CaseScenePrefix + _currentCaseId, () =>
+        string sceneName = Scenes.CaseScenePrefix + _currentCaseId;
+        ScenesManager.Instance?.SwitchGameScene(sceneName, sceneLoaded =>
         {
+            if (!sceneLoaded)
+            {
+                Debug.LogError($"Failed to load next case scene {sceneName}.");
+                RecoverToMainMenuWhileBlack();
+                return;
+            }
+
             speakerZone = FindAnyObjectByType<SpeakerZone>();
             interaction = InteractionController.Instance;
-            interaction.SetSpeakerZone(speakerZone);
             flow = FlowController.Instance;
+            if (speakerZone == null || interaction == null || flow == null)
+            {
+                Debug.LogError($"Next case scene {sceneName} is missing required gameplay objects.");
+                RecoverToMainMenuWhileBlack();
+                return;
+            }
+
+            interaction.SetSpeakerZone(speakerZone);
+            EndSceneTransition();
             flow.FlowInit();
             CaptureSceneSnapshot();
+            SaveManager.Instance.SaveGameData();
         });
     }
 
@@ -261,11 +347,126 @@ public class GameManager : SingletonMono<GameManager>
 
     public void LoadMainMenu()
     {
+        if (!TryBeginSceneTransition()) return;
+        StartCoroutine(LoadMainMenuWithTransitionRoutine());
+    }
+
+    private IEnumerator LoadMainMenuWithTransitionRoutine()
+    {
+        ScreenFader fader = null;
+        yield return GetOrLoadScreenFader(value => fader = value);
+        if (fader == null)
+        {
+            Debug.LogError("LoadMainMenu failed to load the screen fader.");
+            EndSceneTransition();
+            yield break;
+        }
+
+        yield return fader.FadeOut(0.5f);
+        LoadMainMenuImmediately(_ => StartCoroutine(FadeInAndEndSceneTransition()));
+    }
+
+    internal void LoadMainMenuImmediately(Action<bool> onLoaded)
+    {
         Time.timeScale = 1f;
         SwitchGameState(GameState.MainMenu);
-        ScenesManager.Instance.LoadSceneAsync(Scenes.MainMenuSceneName, () =>
+        ScenesManager.Instance.SwitchGameScene(Scenes.MainMenuSceneName, sceneLoaded =>
         {
-            UIManager.Instance.ShowPanel<MainMenuPanel>("main_menu_panel");
+            if (!sceneLoaded)
+            {
+                Debug.LogError($"Failed to load main menu scene {Scenes.MainMenuSceneName}.");
+                onLoaded?.Invoke(false);
+                return;
+            }
+
+            UIManager.Instance.HidePanel("demon_panel");
+            UIManager.Instance.HidePanel("case_board_panel");
+            UIManager.Instance.HidePanel("story_dialogue_panel");
+            UIManager.Instance.HidePanel("success_panel");
+            UIManager.Instance.HidePanel("death_panel");
+            UIManager.Instance.HidePanel("main_setting_panel");
+            UIManager.Instance.ShowPanel<MainMenuPanel>("main_menu_panel", E_UILayer.MiddleLayer, panel =>
+            {
+                bool menuReady = panel != null;
+                if (menuReady)
+                {
+                    AudioManager.Instance.StopPlayBGM();
+                    AudioManager.Instance.StartPlayBGM("loop");
+                }
+                else
+                {
+                    Debug.LogError("Failed to show main_menu_panel.");
+                }
+                onLoaded?.Invoke(menuReady);
+            });
+        });
+    }
+
+    public void LoadOpeningScene()
+    {
+        if (!TryBeginSceneTransition()) return;
+        StartCoroutine(LoadOpeningSceneRoutine());
+    }
+
+    private IEnumerator LoadOpeningSceneRoutine()
+    {
+        ScreenFader fader = null;
+        yield return GetOrLoadScreenFader(value => fader = value);
+        if (fader == null)
+        {
+            Debug.LogError("LoadOpeningScene failed to load the screen fader.");
+            EndSceneTransition();
+            yield break;
+        }
+
+        yield return fader.FadeOut(0.5f);
+        ScenesManager.Instance.SwitchGameScene(Scenes.OpeningSceneName, sceneLoaded =>
+        {
+            if (!sceneLoaded)
+            {
+                Debug.LogError($"Failed to load opening scene {Scenes.OpeningSceneName}.");
+                RecoverToMainMenuWhileBlack();
+                return;
+            }
+
+            UIManager.Instance.HidePanel("main_menu_panel");
+            EndSceneTransition();
+        });
+    }
+
+    public void LoadEndingScene()
+    {
+        if (!TryBeginSceneTransition()) return;
+        StartCoroutine(LoadEndingSceneRoutine());
+    }
+
+    private IEnumerator LoadEndingSceneRoutine()
+    {
+        ScreenFader fader = null;
+        yield return GetOrLoadScreenFader(value => fader = value);
+        if (fader == null)
+        {
+            Debug.LogError("LoadEndingScene failed to load the screen fader.");
+            EndSceneTransition();
+            yield break;
+        }
+
+        yield return fader.FadeOut(0.5f);
+        Time.timeScale = 1f;
+        SwitchGameState(GameState.GameVictory);
+        ScenesManager.Instance.SwitchGameScene(Scenes.EndingSceneName, sceneLoaded =>
+        {
+            if (!sceneLoaded)
+            {
+                Debug.LogError($"Failed to load ending scene {Scenes.EndingSceneName}.");
+                RecoverToMainMenuWhileBlack();
+                return;
+            }
+
+            AudioManager.Instance.StopPlayBGM();
+            AudioManager.Instance.StartPlayBGM("ending");
+            UIManager.Instance.HidePanel("main_menu_panel");
+            EndSceneTransition();
         });
     }
 
@@ -405,12 +606,18 @@ public class GameManager : SingletonMono<GameManager>
     /// <summary>随机取一条恶魔被击败发言（真结局用），不触发事件，交给调用方自行展示</summary>
     public string GetRandomDefeatSpeak()
     {
-        if (_demonSpeak == null || _demonSpeak.demonSpeakDatas == null || _demonSpeak.demonSpeakDatas.Count == 0)
+        DemonSpeakDataSO demonSpeak = _demonSpeak;
+        if (demonSpeak == null && DataManager.Instance != null)
+        {
+            demonSpeak = DataManager.Instance.GetDemonSpeak();
+        }
+
+        if (demonSpeak == null || demonSpeak.demonSpeakDatas == null || demonSpeak.demonSpeakDatas.Count == 0)
         {
             return string.Empty;
         }
-        int index = Random.Range(0, _demonSpeak.demonSpeakDatas.Count);
-        return _demonSpeak.demonSpeakDatas[index].defeatSpeak;
+        int index = Random.Range(0, demonSpeak.demonSpeakDatas.Count);
+        return demonSpeak.demonSpeakDatas[index].defeatSpeak;
     }
     /* public void DemonDefeatSpeak()
      {
@@ -470,12 +677,42 @@ public class GameManager : SingletonMono<GameManager>
             yield break;
         }
 
+        bool revealOnNextLine = true;
         foreach (string line in lines)
         {
             if (string.IsNullOrEmpty(line)) continue;
-            yield return PlayLineAndWaitForContinue(panel, line);
+            yield return PlayLineAndWaitForContinue(panel, line, revealOnNextLine);
+            revealOnNextLine = false;
         }
 
+        onComplete?.Invoke();
+    }
+
+    public void PlayEndingStory(Action onComplete)
+    {
+        StartCoroutine(PlayEndingStoryRoutine(onComplete));
+    }
+
+    private IEnumerator PlayEndingStoryRoutine(Action onComplete)
+    {
+        string endingLine = GetRandomDefeatSpeak();
+        if (string.IsNullOrEmpty(endingLine))
+        {
+            Debug.LogWarning("PlayEndingStory: 未找到有效的结局台词，返回主菜单。");
+            onComplete?.Invoke();
+            yield break;
+        }
+
+        StoryDialoguePanel panel = null;
+        yield return GetOrLoadStoryDialoguePanel(p => panel = p);
+        if (panel == null)
+        {
+            Debug.LogWarning("PlayEndingStory: 未找到 story_dialogue_panel，返回主菜单。");
+            onComplete?.Invoke();
+            yield break;
+        }
+
+        yield return PlayLineAndWaitForContinue(panel, endingLine, revealScreen: true);
         UIManager.Instance.HidePanel("story_dialogue_panel");
         onComplete?.Invoke();
     }
@@ -503,12 +740,16 @@ public class GameManager : SingletonMono<GameManager>
     }
 
     /// <summary>播完一句并等玩家点箭头推进（点击时若还在打字会先跳字，需要再点一次才会推进）</summary>
-    public IEnumerator PlayLineAndWaitForContinue(StoryDialoguePanel panel, string line)
+    public IEnumerator PlayLineAndWaitForContinue(StoryDialoguePanel panel, string line, bool revealScreen = false)
     {
         bool advance = false;
         Action onContinue = () => advance = true;
         panel.ContinueClicked += onContinue;
         panel.PlayLine(line, null);
+        if (revealScreen)
+        {
+            yield return FadeInScreenIfNeeded();
+        }
         yield return new WaitUntil(() => advance);
         panel.ContinueClicked -= onContinue;
     }
@@ -517,8 +758,9 @@ public class GameManager : SingletonMono<GameManager>
     /// <summary>
     /// 开场剧情播放完成后调用：渐黑挡住案件一场景加载，再真正进入案件一
     /// </summary>
-    public void FadeToBlackThenStartNewGame(float fadeDuration = 1.5f)
+    public void FadeToBlack(float fadeDuration = 1.5f)
     {
+        if (!TryBeginSceneTransition()) return;
         StartCoroutine(FadeToBlackThenStartNewGameRoutine(fadeDuration));
     }
 
@@ -527,12 +769,76 @@ public class GameManager : SingletonMono<GameManager>
         ScreenFader fader = null;
         yield return GetOrLoadScreenFader(f => fader = f);
 
-        if (fader != null)
+        if (fader == null)
         {
-            yield return fader.FadeOut(fadeDuration);
+            Debug.LogError("FadeToBlack failed to load the screen fader.");
+            EndSceneTransition();
+            yield break;
         }
 
+        yield return fader.FadeOut(fadeDuration);
+        UIManager.Instance.HidePanel("story_dialogue_panel");
         StartNewGame();
+    }
+
+    public void ContinueGame()
+    {
+        if (!TryBeginSceneTransition()) return;
+        StartCoroutine(ContinueGameRoutine());
+    }
+
+    private IEnumerator ContinueGameRoutine()
+    {
+        ScreenFader fader = null;
+        yield return GetOrLoadScreenFader(value => fader = value);
+
+        if (fader == null)
+        {
+            Debug.LogError("ContinueGame failed to load the screen fader.");
+            EndSceneTransition();
+            yield break;
+        }
+
+        yield return fader.FadeOut(0.5f);
+
+        if (!SaveManager.Instance.LoadGameData())
+        {
+            yield return fader.FadeIn(0.5f);
+            EndSceneTransition();
+        }
+    }
+
+    private void RevealCurrentScreenAfterContinueFailure()
+    {
+        StartCoroutine(FadeInAndEndSceneTransition());
+    }
+
+    private void ReturnToMainMenuAfterContinueFailure()
+    {
+        RecoverToMainMenuWhileBlack();
+    }
+
+    private bool TryBeginSceneTransition()
+    {
+        if (_isSceneTransitioning) return false;
+        _isSceneTransitioning = true;
+        return true;
+    }
+
+    private void EndSceneTransition()
+    {
+        _isSceneTransitioning = false;
+    }
+
+    private void RecoverToMainMenuWhileBlack()
+    {
+        LoadMainMenuImmediately(_ => StartCoroutine(FadeInAndEndSceneTransition()));
+    }
+
+    private IEnumerator FadeInAndEndSceneTransition(float duration = 0.5f)
+    {
+        yield return FadeInScreenIfNeeded(duration);
+        EndSceneTransition();
     }
 
     /// <summary>
@@ -595,6 +901,9 @@ public class GameManager : SingletonMono<GameManager>
         _currentCaseIndex = 0;
         _currentCaseId = allCaseIds[_currentCaseIndex];
         _currentWords = DEFAULT_WORDS;
+        _gameCompleted = false;
+        latestItemId = 0;
+        _currentDebuffId = 0;
 
         _items.Clear();
         _options.Clear();
@@ -667,5 +976,89 @@ public class GameManager : SingletonMono<GameManager>
     {
         if (flow == null) flow = FlowController.Instance;
         flow.ShowSuccess(_currentCaseId);
+    }
+
+    public ISavedData SaveData()
+    {
+        if (!allCaseIds.Contains(_currentCaseId) ||
+            (ScenesManager.Instance != null && ScenesManager.Instance.IsSwitching))
+        {
+            Debug.LogWarning("Game progress cannot be saved before a case is ready.");
+            return null;
+        }
+
+        return new GameProgressSavedData
+        {
+            currentCaseId = _currentCaseId,
+            gameCompleted = _gameCompleted
+        };
+    }
+
+    public void LoadData(ISavedData data)
+    {
+        if (!(data is GameProgressSavedData gameData))
+        {
+            Debug.LogError("Game save data has an invalid type.");
+            RevealCurrentScreenAfterContinueFailure();
+            return;
+        }
+
+        int caseIndex = allCaseIds.IndexOf(gameData.currentCaseId);
+        if (caseIndex < 0)
+        {
+            Debug.LogError("Game save data contains invalid progress values.");
+            RevealCurrentScreenAfterContinueFailure();
+            return;
+        }
+
+        _currentCaseId = gameData.currentCaseId;
+        _currentCaseIndex = caseIndex;
+        _currentWords = DEFAULT_WORDS;
+        _gameCompleted = gameData.gameCompleted;
+        latestItemId = 0;
+        _currentDebuffId = 0;
+        _items.Clear();
+        _options.Clear();
+        _gotCaseItemIds.Clear();
+        _sceneSnapshots.Clear();
+
+        if (_gameCompleted)
+        {
+            EndSceneTransition();
+            LoadEndingScene();
+            return;
+        }
+
+        PrepareCaseData(_currentCaseId);
+
+        if (InputManager.Instance != null)
+            InputManager.Instance.SetInputEnabled(false);
+
+        string sceneName = Scenes.CaseScenePrefix + _currentCaseId;
+        ScenesManager.Instance.SwitchGameScene(sceneName, sceneLoaded =>
+        {
+            if (!sceneLoaded)
+            {
+                Debug.LogError($"Failed to load saved case scene {sceneName}.");
+                ReturnToMainMenuAfterContinueFailure();
+                return;
+            }
+
+            speakerZone = FindAnyObjectByType<SpeakerZone>();
+            interaction = InteractionController.Instance;
+            flow = FlowController.Instance;
+            if (speakerZone == null || interaction == null || flow == null)
+            {
+                Debug.LogError("Saved case scene is missing required gameplay objects.");
+                ReturnToMainMenuAfterContinueFailure();
+                return;
+            }
+
+            interaction.SetSpeakerZone(speakerZone);
+            EndSceneTransition();
+            flow.FlowInit(playIntroStory: true);
+            CaptureSceneSnapshot();
+            SwitchGameState(GameState.Playing);
+        });
     }
 }

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class InteractionController : SingletonMono<InteractionController>
 {
@@ -34,10 +36,10 @@ public class InteractionController : SingletonMono<InteractionController>
     public void Update()
     {
         // ★ 第一优先级：检查是否点击在 UI 上
-        if (UnityEngine.EventSystems.EventSystem.current != null &&
-            UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+        EventSystem eventSystem = EventSystem.current;
+        if (eventSystem != null && eventSystem.IsPointerOverGameObject())
         {
-            if (InputManager.Instance.GetMouseDown(0))
+            if (InputManager.Instance.GetMouseDown(0) && !IsPointerOverButton(eventSystem))
             {
                 UIEmptyClick();
             }
@@ -59,6 +61,26 @@ public class InteractionController : SingletonMono<InteractionController>
         {
             OnMouseUpOnObject();
         }
+    }
+
+    private bool IsPointerOverButton(EventSystem eventSystem)
+    {
+        PointerEventData pointerData = new PointerEventData(eventSystem)
+        {
+            position = InputManager.Instance.GetMousePosition()
+        };
+        List<RaycastResult> raycastResults = new List<RaycastResult>();
+        eventSystem.RaycastAll(pointerData, raycastResults);
+
+        foreach (RaycastResult result in raycastResults)
+        {
+            if (result.gameObject != null && result.gameObject.GetComponentInParent<Button>() != null)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     //初始化发声槽
@@ -105,11 +127,12 @@ public class InteractionController : SingletonMono<InteractionController>
             }
             else if (FlowController.Instance.CurrentState == GameFlowState.CaseFail)
             {
-                AudioManager.Instance.StartPlaySound("sfx_13", false, (audio) =>
+                AudioManager.Instance.StartPlaySound("sfx_13", false);
+                bool retryOwnsPanelDismissal = GameManager.Instance.RetryCurrentCase();
+                if (!retryOwnsPanelDismissal)
                 {
-                    GameManager.Instance.RetryCurrentCase();
                     UIManager.Instance.HidePanel("death_panel");
-                });
+                }
             }
         }
     }

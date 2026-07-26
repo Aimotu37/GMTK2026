@@ -15,6 +15,7 @@ public class SettingPresenter : MonoBehaviour
     {
         _panel = GetComponent<SettingPanel>();
         RegisterEvents();
+        OnPanelShown();
     }
 
     private void RegisterEvents()
@@ -27,14 +28,19 @@ public class SettingPresenter : MonoBehaviour
 
         _panel.SetVolume(new List<float>()
         {
-            AudioManager.Instance.BgmVolume,
-            AudioManager.Instance.SfxVolume
+            SettingsManager.Instance.BgmVolume,
+            SettingsManager.Instance.SfxVolume
         });
         _panel.OnBGMVolumeChange += SetBgmVolume;
         _panel.OnSFXVolumeChange += SetSFxVolume;
-        _panel.SaveGameClick += HandleSaveGame;
         _panel.OnAboutUsClick += HandleAboutUs;
         _panel.OnBackClick += HandleBackClick;
+        _panel.BackToMainClicked += HandleBackToMain;
+    }
+
+    private void OnPanelShown()
+    {
+        _panel?.SetBackToMainVisable(GameManager.Instance.CurrentState != GameState.MainMenu);
     }
 
     private void OnDestroy()
@@ -43,28 +49,23 @@ public class SettingPresenter : MonoBehaviour
         {
             _panel.OnBGMVolumeChange -= SetBgmVolume;
             _panel.OnSFXVolumeChange -= SetSFxVolume;
-            _panel.SaveGameClick -= HandleSaveGame;
             _panel.OnAboutUsClick -= HandleAboutUs;
             _panel.OnBackClick -= HandleBackClick;
         }
-
     }
 
     private void SetBgmVolume(float volume)
     {
         AudioManager.Instance.SetBGMVolume(volume);
+        SettingsManager.Instance.SetBgmVolume(volume);
         _panel._bgmVolumeText.text = 100 * volume + "/100";
     }
 
     private void SetSFxVolume(float volume)
     {
         AudioManager.Instance.SetSoundVolume(volume);
+        SettingsManager.Instance.SetSfxVolume(volume);
         _panel._sfxVolumeText.text = 100 * volume + "/100";
-    }
-
-    private void HandleSaveGame()
-    {
-        SaveManager.Instance.SaveGameData();
     }
 
     //TODO:待处理关于我们
@@ -79,5 +80,11 @@ public class SettingPresenter : MonoBehaviour
         {
             UIManager.Instance.HidePanel(_panelName);
         }
+    }
+
+    private void HandleBackToMain()
+    {
+        GameManager.Instance.LoadMainMenu();
+        UIManager.Instance.HidePanel(_panelName);
     }
 }

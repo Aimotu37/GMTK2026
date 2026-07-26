@@ -80,9 +80,19 @@ public sealed class GameBootstrap : MonoBehaviour
         _waitingForMainMenu = true;
         //EventCenterMgr.Instance.EventRegister<string>(GameEvents.SceneLoaded, HandleSceneLoaded);
         _loadingView.ShowSceneLoading(Scenes.MainMenuSceneName);
-        HandleSceneLoaded(Scenes.MainMenuSceneName);
-        //ScenesManager.Instance.LoadSceneAsync(Scenes.MainMenuSceneName);
-        GameManager.Instance.LoadMainMenu();
+        GameManager.Instance.LoadMainMenuImmediately(mainMenuReady =>
+        {
+            if (mainMenuReady)
+            {
+                HandleSceneLoaded(Scenes.MainMenuSceneName);
+            }
+            else
+            {
+                _waitingForMainMenu = false;
+                State = BootstrapState.Failed;
+                Debug.LogError("Game startup failed while loading the main menu.");
+            }
+        });
     }
 
     private static GameStartPipeline CreatePipeline()

@@ -6,16 +6,16 @@ using System.Collections.Generic;
 
 public class SettingPanel : BasePanel
 {
-    private const string SaveGameButtonName = "SaveGameButton";
     private const string AboutUsButtonName = "AboutUsButton";
     private const string BackButtonName = "BackButton";
+    private const string BackToMainButtonName = "BackToMainButton";
 
     private const string BgmVSliderName = "BgmVolumeSlider";
     private const string SfxVSliderName = "SfxVolumeSlider";
 
     public event Action<float> OnBGMVolumeChange;
     public event Action<float> OnSFXVolumeChange;
-    public event Action SaveGameClick;
+    public event Action BackToMainClicked;
     public event Action OnAboutUsClick;
     public event Action OnBackClick;
 
@@ -28,14 +28,14 @@ public class SettingPanel : BasePanel
     {
         switch (buttonName)
         {
-            case SaveGameButtonName:
-                SaveGameClick?.Invoke();
-                break;
             case AboutUsButtonName:
                 OnAboutUsClick?.Invoke();
                 break;
             case BackButtonName:
                 OnBackClick?.Invoke();
+                break;
+            case BackToMainButtonName:
+                BackToMainClicked?.Invoke();
                 break;
         }
     }
@@ -64,5 +64,10 @@ public class SettingPanel : BasePanel
         _bgmVolumeText.text = 100 * data[0] + "/100";
         _sfxVolumeSlider.value = data[1];
         _sfxVolumeText.text = 100 * data[1] + "/100";
+    }
+
+    public void SetBackToMainVisable(bool isVisable)
+    {
+        FindComponent<Button>(BackToMainButtonName).gameObject.SetActive(isVisable);
     }
 }

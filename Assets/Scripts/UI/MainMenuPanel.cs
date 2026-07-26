@@ -38,12 +38,6 @@ public class MainMenuPanel : BasePanel
 
     public void SetContinueBTNInteractble(bool isInteractable)
     {
-        foreach (var ui in _components[ContinueButtonName])
-        {
-            if (ui is Button button)
-            {
-                button.interactable = isInteractable;
-            }
-        }
+        FindComponent<Button>(ContinueButtonName).interactable = isInteractable;
     }
 }

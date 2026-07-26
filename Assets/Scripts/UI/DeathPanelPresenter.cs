@@ -22,7 +22,7 @@ public class DeathPanelPresenter : MonoBehaviour
             return;
         }
 
-        _panel.BackToMainClicked += HandleBackToMian;
+        _panel.BackToMainClicked += HandleBackToMain;
         _panel.RetryClicked += HandleTetry;
     }
 
@@ -30,12 +30,12 @@ public class DeathPanelPresenter : MonoBehaviour
     {
         if (_panel != null)
         {
-            _panel.BackToMainClicked -= HandleBackToMian;
+            _panel.BackToMainClicked -= HandleBackToMain;
             _panel.RetryClicked -= HandleTetry;
         }
     }
 
-    private void HandleBackToMian()
+    private void HandleBackToMain()
     {
         GameManager.Instance.LoadMainMenu();
         UIManager.Instance.HidePanel(_panelName);
@@ -43,7 +43,10 @@ public class DeathPanelPresenter : MonoBehaviour
 
     private void HandleTetry()
     {
-        GameManager.Instance.RetryCurrentCase();
-        UIManager.Instance.HidePanel(_panelName);
+        bool retryOwnsPanelDismissal = GameManager.Instance.RetryCurrentCase();
+        if (!retryOwnsPanelDismissal)
+        {
+            UIManager.Instance.HidePanel(_panelName);
+        }
     }
 }

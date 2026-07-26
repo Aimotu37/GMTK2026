@@ -13,6 +13,8 @@ public sealed class RuntimeServicesStartModule : IGameStartModule
             yield break;
         }
 
+        SettingsManager.Instance.Initialize();
+
         yield return AudioManager.Instance.InitializeAsync();
         if (!AudioManager.Instance.IsInitialized)
         {

@@ -11,6 +11,7 @@ public sealed class MainMenuPresenter : MonoBehaviour
     {
         _panel = GetComponent<MainMenuPanel>();
         RegisterEvents();
+        _panel.SetContinueBTNInteractble(SaveManager.Instance.HasGameSavedData());
     }
 
     private void OnDestroy()
@@ -41,19 +42,12 @@ public sealed class MainMenuPresenter : MonoBehaviour
     {
         // 切到独立的开场剧情场景（恶魔契约对话），播完由该场景负责进入案件一
         AudioManager.Instance.StartPlaySound("sfx_01_07_09", false);
-        UIManager.Instance.HidePanel(_panelName);
-        ScenesManager.Instance.LoadSceneAsync(Scenes.OpeningSceneName);
+        GameManager.Instance.LoadOpeningScene();
     }
 
     private void HandleContinueClicked()
     {
-        if (!SaveManager.Instance.LoadGameData())
-        {
-            print("Load SavedData Faild");
-            return;
-        }
-
-        //GameManager.Instance.ContinueGame();
+        GameManager.Instance.ContinueGame();
     }
 
     private void HandleSettingsClicked()
