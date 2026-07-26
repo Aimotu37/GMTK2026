@@ -128,8 +128,11 @@ public class InteractionController : SingletonMono<InteractionController>
             else if (FlowController.Instance.CurrentState == GameFlowState.CaseFail)
             {
                 AudioManager.Instance.StartPlaySound("sfx_13", false);
-                GameManager.Instance.RetryCurrentCase();
-                UIManager.Instance.HidePanel("death_panel");
+                bool retryOwnsPanelDismissal = GameManager.Instance.RetryCurrentCase();
+                if (!retryOwnsPanelDismissal)
+                {
+                    UIManager.Instance.HidePanel("death_panel");
+                }
             }
         }
     }

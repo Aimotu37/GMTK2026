@@ -43,7 +43,10 @@ public class DeathPanelPresenter : MonoBehaviour
 
     private void HandleTetry()
     {
-        GameManager.Instance.RetryCurrentCase();
-        UIManager.Instance.HidePanel(_panelName);
+        bool retryOwnsPanelDismissal = GameManager.Instance.RetryCurrentCase();
+        if (!retryOwnsPanelDismissal)
+        {
+            UIManager.Instance.HidePanel(_panelName);
+        }
     }
 }

@@ -52,6 +52,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 95e29370db9c3f94f933e4e47b748366
+    m_Address: audio/bgm/loop
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9dca02343c04ed74cbc2ad8fceefbe5a
     m_Address: ui/death_panel
     m_ReadOnly: 0
@@ -59,6 +64,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b3299a278ba89ee47a627cd40715e50e
     m_Address: audio/sfx/sfx_03_08
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b38d628366cfcb941bb16b28cde028d2
+    m_Address: audio/bgm/ending
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

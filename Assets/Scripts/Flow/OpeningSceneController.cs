@@ -10,7 +10,7 @@ public class OpeningSceneController : MonoBehaviour
         GameManager.Instance.PlayOpeningStory(() =>
         {
             //GameManager.Instance.StartNewGame();
-            GameManager.Instance.FadeToBlackThenStartNewGame();//让开场剧情播完走"渐黑→进案件一"而不是直接切
+            GameManager.Instance.FadeToBlack();//让开场剧情播完走"渐黑→进案件一"而不是直接切
         });
     }
 }

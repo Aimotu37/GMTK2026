@@ -135,16 +135,31 @@ public class FlowController : SingletonMono<FlowController>
     {
         UIManager.Instance.HidePanel("main_menu_panel");
         yield return null;
+
+        bool caseBoardRequestCompleted = false;
+        bool demonRequestCompleted = false;
+
         //需要恢复案件线索板
         UIManager.Instance.HidePanel("case_board_panel");
-        UIManager.Instance.ShowPanel<CaseBoardPanel>("case_board_panel");
-        UIManager.Instance.HidePanel("demon_panel");
-        UIManager.Instance.ShowPanel<DemonPanel>("demon_panel", E_UILayer.TopLayer, (panel) =>
+        UIManager.Instance.ShowPanel<CaseBoardPanel>("case_board_panel", E_UILayer.MiddleLayer, panel =>
         {
-            EventManager.Instance.EventTrigger(GameEvents.CheckCaseClues, GameManager.Instance.GotCaseItemIds.Count > 0);
-            _currentState = _skipIntroStory ? GameFlowState.Exploring : GameFlowState.StoryPlaying;
-            TransitionTo(_currentState);
+            caseBoardRequestCompleted = true;
         });
+        UIManager.Instance.HidePanel("demon_panel");
+        UIManager.Instance.ShowPanel<DemonPanel>("demon_panel", E_UILayer.TopLayer, panel =>
+        {
+            demonRequestCompleted = true;
+        });
+
+        yield return new WaitUntil(() => caseBoardRequestCompleted && demonRequestCompleted);
+        EventManager.Instance.EventTrigger(GameEvents.CheckCaseClues, GameManager.Instance.GotCaseItemIds.Count > 0);
+        _currentState = _skipIntroStory ? GameFlowState.Exploring : GameFlowState.StoryPlaying;
+        TransitionTo(_currentState);
+
+        if (_skipIntroStory)
+        {
+            yield return GameManager.Instance.FadeInScreenIfNeeded();
+        }
     }
 
     private IEnumerator HandleStoryPlay(float duration)
@@ -156,13 +171,10 @@ public class FlowController : SingletonMono<FlowController>
 
         if (string.IsNullOrEmpty(story))
         {
-            // 没有配置剧情文本时，退回到纯等待，避免卡流程
-            float elapsed = 0f;
-            while (elapsed < duration)
-            {
-                elapsed += Time.deltaTime;
-                yield return null;
-            }
+            // 没有配置剧情文本时，先完成探索状态初始化，再揭开黑屏。
+            FlowStateChange(GameFlowState.Exploring);
+            yield return GameManager.Instance.FadeInScreenIfNeeded();
+            yield break;
         }
         //print("播放动画结束");
         else
@@ -173,6 +185,9 @@ public class FlowController : SingletonMono<FlowController>
             if (panel == null)
             {
                 Debug.LogWarning("HandleStoryPlay: 未找到 story_dialogue_panel，无法播放剧情文本。");
+                FlowStateChange(GameFlowState.Exploring);
+                yield return GameManager.Instance.FadeInScreenIfNeeded();
+                yield break;
             }
             else
             {
@@ -282,14 +297,6 @@ public class FlowController : SingletonMono<FlowController>
             else
             {
                 yield return GameManager.Instance.PlayLineAndWaitForContinue(panel, truth);
-                // 下一案的 HandleStoryPlay（或真结局的 HandleTrueEnd）在内容准备好后自己渐显
-                ScreenFader fader = null;
-                yield return GameManager.Instance.GetOrLoadScreenFader(f => fader = f);
-                if (fader != null)
-                {
-                    yield return fader.FadeOut(0.5f);
-                }
-                UIManager.Instance.HidePanel("story_dialogue_panel");
             }
         }
 
