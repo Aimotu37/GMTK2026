@@ -8,8 +8,6 @@ public class CaseDataSO : ScriptableObject
     public int caseID;
     public string caseName;
     public string sceneBg;
-    [TextArea(3, 8)]
-    public string storyText;
-    [TextArea(3, 8)]
-    public string truthText;
+    public List<StoryDialogueLineData> storyLines;
+    public List<StoryDialogueLineData> truthLines;
 }

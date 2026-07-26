@@ -802,6 +802,7 @@ GameObject:
   - component: {fileID: 2551022638237829670}
   - component: {fileID: 3319570481334900561}
   - component: {fileID: 8437717166431169714}
+  - component: {fileID: 1190041032887265011}
   m_Layer: 5
   m_Name: DemonPanel
   m_TagString: Untagged
@@ -875,3 +876,25 @@ MonoBehaviour:
   punctuationSpeed: 0.3
   autoStart: 0
   lockInputWhileTyping: 1
+--- !u!114 &1190041032887265011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6400551558264799353}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6b8c4d2e1f0475aa9b3c2d4e5f60718, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  enlargedScale: 1.25
+  growDuration: 0.1
+  returnDuration: 0.1
+  shakeDuration: 0.14
+  shakeStrength: 10
+  particleCount: 8
+  particleLifetime: 0.24
+  particleDistance: 42
+  particleSize: 8
+  particleColor: {r: 1, g: 0.18, b: 0.08, a: 1}
