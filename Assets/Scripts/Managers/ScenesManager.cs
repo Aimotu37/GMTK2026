@@ -14,6 +14,8 @@ class Scenes
     public const string Level_1_SceneName = "Scene_Level_1";
     //Case场景的名字=Prefix+caseID
     public const string CaseScenePrefix = "Scene_Case_";
+    //public const string CaseScenePrefix = "Scene_Case_1001";
+
     public const string Interaction_Test_1_SceneName = "Scene_Interaction_Test_1";
 }
 
