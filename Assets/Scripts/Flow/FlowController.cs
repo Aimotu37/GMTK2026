@@ -12,7 +12,7 @@ public enum GameFlowState
     OptionChoosing,   // 选项页面
     Success,          // 成功还原
     TruthShowing,     // 展示真相
-    Death,            // 死亡
+    CaseFail,            // 死亡
     TrueEnd           // 真结局
 }
 
@@ -22,7 +22,7 @@ public class FlowController : SingletonMono<FlowController>
     private GameFlowState _currentState;
     public GameFlowState CurrentState => _currentState;
     /// <summary>当前是否处于"点击空白处继续"的等待状态（成功页看真相 / 死亡页重试）</summary>  
-    public bool IsWaitForClickEmpty => _currentState == GameFlowState.Success || _currentState == GameFlowState.Death;
+    public bool IsWaitForClickEmpty => _currentState == GameFlowState.Success || _currentState == GameFlowState.CaseFail;
 
     //流程运行变量
     private float clueDuration = 1.5f;
@@ -118,18 +118,14 @@ public class FlowController : SingletonMono<FlowController>
                 break;
 
             case GameFlowState.TruthShowing:
-                // 在成功场景上弹出真相弹窗（由SuccessController处理）
-                // 这里不切场景，只发状态通知
-                //UIManager.Instance.ShowTruthPopup();
-                StartCoroutine(HandleTruthShow());
+                StartCoroutine(HandleCaseTruthShow());
                 break;
 
-            case GameFlowState.Death:
-                StartCoroutine(HandleDeath());
+            case GameFlowState.CaseFail:
+                StartCoroutine(HandleCaseFail());
                 break;
 
             case GameFlowState.TrueEnd:
-                //SceneManager.LoadScene(TRUE_END_SCENE);
                 StartCoroutine(HandleTrueEnd());
                 break;
         }
@@ -169,7 +165,7 @@ public class FlowController : SingletonMono<FlowController>
             }
         }
         //print("播放动画结束");
-         else
+        else
         {
             StoryDialoguePanel panel = null;
             yield return GameManager.Instance.GetOrLoadStoryDialoguePanel(p => panel = p);
@@ -190,16 +186,16 @@ public class FlowController : SingletonMono<FlowController>
                 panel.ContinueClicked -= onContinue;
                 UIManager.Instance.HidePanel("story_dialogue_panel");
             }
-         }
-
-        _currentState = GameFlowState.Exploring;
-        TransitionTo(_currentState);
+        }
+        FlowStateChange(GameFlowState.Exploring);
     }
 
     private IEnumerator HandleExplore()
     {
         GameManager.Instance.DemonSpeak();
         demonSpeak = StartCoroutine(DemonSpeakPeriodically());
+        string caseName = GameManager.Instance.CurrentCaseData.caseName;
+        UIManager.Instance.GetPanel<CaseBoardPanel>("case_board_panel").SetCaseName(caseName);
         yield break;
     }
 
@@ -244,7 +240,8 @@ public class FlowController : SingletonMono<FlowController>
 
         // 线索弹窗完全播完、玩家能重新操作之后，才决定这次要不要触发诅咒，跟线索信息错开成两拍
         yield return new WaitForSeconds(0.3f);
-        GameManager.Instance.TryTriggerDebuff();
+        if (GameManager.Instance.CurrentCaseIndex == 3)
+            GameManager.Instance.TryTriggerDebuff();
     }
 
     private IEnumerator HandleOptionChose()
@@ -263,7 +260,7 @@ public class FlowController : SingletonMono<FlowController>
         yield break;
     }
 
-    private IEnumerator HandleTruthShow()
+    private IEnumerator HandleCaseTruthShow()
     {
         // 1.展示真相页面
         // 展示案件真相文本（复用通用剧情对话框），读完点击继续后自动进入下一案件/真结局
@@ -299,11 +296,11 @@ public class FlowController : SingletonMono<FlowController>
         GameManager.Instance.NextCase();
     }
 
-    private IEnumerator HandleDeath()
+    private IEnumerator HandleCaseFail()
     {
         GameManager.Instance.DemonMockSpeak();
         yield return new WaitForSeconds(0.5f);
-        GameManager.Instance.GameOver();
+        //GameManager.Instance.GameOver();
         UIManager.Instance.ShowPanel<DeathPanel>("death_panel", E_UILayer.MiddleLayer);
         yield break;
     }

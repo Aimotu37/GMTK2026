@@ -29,7 +29,7 @@ public class AudioManager : SingletonMono<AudioManager>
     private readonly string _bgmKeyPrefix = "audio/bgm/";
 
     // 音效默认音量大小 0.7
-    private float _sfxVolume = 0.7f;
+    private float _sfxVolume = 0.4f;
     public float SfxVolume => _sfxVolume;
     //private readonly string SFXFilePath = "Audios/SFX/";
     private readonly string _sfxKeyPrefix = "audio/sfx/";
@@ -65,17 +65,13 @@ public class AudioManager : SingletonMono<AudioManager>
         else
         {
             _isInitialized = true;
-            StartPlayBGM("testBgm");
+            //StartPlayBGM("testBgm");
             Debug.Log(this.name + " Initialization Successful.");
         }
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.P))
-        {
-            StartPlaySound("testSound", false);
-        }
         // 每帧检查音效是否播放结束，销毁播放结束的音效源
         for (int i = 0; i < sfxSourceList.Count; i++)
         {

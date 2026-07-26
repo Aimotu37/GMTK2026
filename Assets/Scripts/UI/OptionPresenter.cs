@@ -30,6 +30,7 @@ public class OptionPresenter : MonoBehaviour
     private void OnPanelShown()
     {
         List<OptionData> options = new List<OptionData>();
+        AudioManager.Instance.StartPlaySound("sfx_03_08", false);
         foreach (var option in GameManager.Instance.Options.Values)
         {
             options.Add(option);
@@ -53,6 +54,7 @@ public class OptionPresenter : MonoBehaviour
     private void HandleOption(string name)
     {
         GameManager.Instance.CheckCaseWin(buttonBindOptionId[name]);
+        AudioManager.Instance.StartPlaySound("sfx_01_07_09", false);
         UIManager.Instance.HidePanel("option_panel");
     }
 

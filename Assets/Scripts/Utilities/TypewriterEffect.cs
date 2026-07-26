@@ -86,7 +86,6 @@ public class TypewriterEffect : MonoBehaviour
         if (lockInputWhileTyping && InteractionController.Instance != null)
         {
             //InputManager.Instance.SetInputEnabled(false);
-            Debug.Log("【打字机】输入已锁定，玩家无法拖拽");
         }
 
         textComponent.text = "";
@@ -101,7 +100,7 @@ public class TypewriterEffect : MonoBehaviour
             currentIndex++;
 
             // TODO:必要：播放打字音效
-            AudioManager.Instance.StartPlaySound("testSound", false);
+            //AudioManager.Instance.StartPlaySound("testSound", false);
 
             float waitTime = normalSpeed;
             if (c == '。' || c == '！' || c == '？' || c == '.' || c == '!' || c == '?' || c == '，' || c == ',')
@@ -119,7 +118,6 @@ public class TypewriterEffect : MonoBehaviour
         if (lockInputWhileTyping && InteractionController.Instance != null)
         {
             //InputManager.Instance.SetInputEnabled(true);
-            Debug.Log("【打字机】输入已解锁，玩家可以继续拖拽");
         }
 
         // 执行回调（比如弹出下一句或关闭对话框）

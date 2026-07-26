@@ -41,12 +41,14 @@ public class SuccessPresenter : MonoBehaviour
 
     private void HandleNextCase()
     {
+        AudioManager.Instance.StartPlaySound("sfx_10_12", false);
         GameManager.Instance.NextCase();
         UIManager.Instance.HidePanel(_panelName);
     }
 
     private void ShowTruth(string truthText)
     {
+        AudioManager.Instance.StartPlaySound("sfx_02_11_14", false);
         _panel.ShowCaseTruth(truthText);
     }
 }

@@ -31,7 +31,7 @@ public class StoryDialoguePanel : BasePanel
     protected override void OnButtonClick(string buttonName)
     {
         if (buttonName != ContinueButtonName) return;
-
+        AudioManager.Instance.StartPlaySound("sfx_02_11_14", false);
         if (typewriter != null && typewriter.IsTyping)
         {
             typewriter.SkipTyping();

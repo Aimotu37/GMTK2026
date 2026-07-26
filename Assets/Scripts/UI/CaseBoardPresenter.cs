@@ -65,6 +65,7 @@ public class CaseBoradPresenter : MonoBehaviour
 
     private void HandleTruthClick()
     {
+        AudioManager.Instance.StartPlaySound("sfx_01_07_09", false);
         if (!isOpen)
         {
             isOpen = true;

@@ -25,7 +25,7 @@ public class GameManager : SingletonMono<GameManager>
     private const int DEFAULT_WORDS = 4;
 
     //每次发言后触发诅咒的概率（0~1），不是每次都触发
-    private const float DEBUFF_TRIGGER_CHANCE = 0.5f;
+    private const float DEBUFF_TRIGGER_CHANCE = 0.2f;
 
     //单局游戏变量
     private CaseDataSO _currentCaseData;
@@ -46,6 +46,7 @@ public class GameManager : SingletonMono<GameManager>
     //private List<int> allCaseIds = new List<int>() { 1001 };//test
     private int _currentCaseId;
     private int _currentCaseIndex;
+    public int CurrentCaseIndex => _currentCaseIndex;
     private int _iscurrentCasePassed;
     //线索相关
     private List<int> _gotCaseItemIds = new List<int>();
@@ -140,7 +141,7 @@ public class GameManager : SingletonMono<GameManager>
 
     public void RetryCurrentCase()
     {
-        flow.FlowInit(playIntroStory: false);
+        _gotCaseItemIds.Clear();
         Scene active = SceneManager.GetActiveScene();
         if (!active.IsValid())
         {
@@ -190,10 +191,7 @@ public class GameManager : SingletonMono<GameManager>
         // 恢复单局变量并启用输入
         _currentWords = DEFAULT_WORDS;
         EventManager.Instance.EventTrigger(GameEvents.CountChanged, _currentWords);
-        //需要恢复案件线索板
-        UIManager.Instance.HidePanel("case_board_panel");
-        UIManager.Instance.ShowPanel<CaseBoardPanel>("case_board_panel");
-
+        flow.FlowInit(playIntroStory: false);
         SwitchGameState(GameState.Playing);
         if (InputManager.Instance != null) InputManager.Instance.SetInputEnabled(true);
     }
@@ -300,7 +298,7 @@ public class GameManager : SingletonMono<GameManager>
         if (_sceneSnapshots.ContainsKey(active.name)) return; // 已有快照不重复捕获
 
         GameObject root = new GameObject($"_SceneSnapshot_{active.name}");
-        //DontDestroyOnLoad(root);
+        DontDestroyOnLoad(root);
 
         // 仅捕获需要恢复的类型，避免克隆单例或管理器
         Item[] items = GameObject.FindObjectsOfType<Item>(true);
@@ -321,7 +319,7 @@ public class GameManager : SingletonMono<GameManager>
         EventManager.Instance.EventTrigger<int>(GameEvents.CountChanged, _currentWords);
         if (_currentWords <= 0)
         {
-            flow.FlowStateChange(GameFlowState.Death);
+            flow.FlowStateChange(GameFlowState.CaseFail);
         }
         else
         {
@@ -368,10 +366,10 @@ public class GameManager : SingletonMono<GameManager>
             EventManager.Instance.EventTrigger(GameEvents.CountChanged, _currentWords);
             if (_currentWords <= 0)
             {
-                flow.FlowStateChange(GameFlowState.Death);
+                flow.FlowStateChange(GameFlowState.CaseFail);
             }
         }
-      
+
     }
 
     /// <summary>从已获得的线索里随机挑一条，重新盖回"未获得"状态</summary>
@@ -395,7 +393,7 @@ public class GameManager : SingletonMono<GameManager>
         }
         else
         {
-            flow.FlowStateChange(GameFlowState.Death);
+            flow.FlowStateChange(GameFlowState.CaseFail);
         }
     }
 
@@ -464,7 +462,7 @@ public class GameManager : SingletonMono<GameManager>
     {
         StoryDialoguePanel panel = null;
         yield return GetOrLoadStoryDialoguePanel(p => panel = p);
-        
+
         if (panel == null)
         {
             Debug.LogWarning("PlayOpeningLines: 未找到 story_dialogue_panel，跳过开场剧情播放。");
@@ -592,8 +590,6 @@ public class GameManager : SingletonMono<GameManager>
         }
     }
 
-
-
     private void ResetAllGameRuntimeData()
     {
         _currentCaseIndex = 0;
@@ -663,7 +659,7 @@ public class GameManager : SingletonMono<GameManager>
     public void DebugForceDeath()
     {
         if (flow == null) flow = FlowController.Instance;
-        flow.FlowStateChange(GameFlowState.Death);
+        flow.FlowStateChange(GameFlowState.CaseFail);
     }
 
     /// <summary>【测试专用】强制判定当前案件成功</summary>

@@ -37,6 +37,21 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4d0f8e220dce3b1488ad17f792793e58
+    m_Address: ui/success_panel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9dca02343c04ed74cbc2ad8fceefbe5a
+    m_Address: ui/death_panel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ba412ff632e0f8e4eb6c0d9f9e550027
+    m_Address: ui/clue_panel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c2f13fdbaee10c049b2cef22983df4be
     m_Address: ui/option_panel
     m_ReadOnly: 0

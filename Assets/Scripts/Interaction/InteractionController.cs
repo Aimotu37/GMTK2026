@@ -85,6 +85,7 @@ public class InteractionController : SingletonMono<InteractionController>
             var item = hit.collider.GetComponent<IInteractive>();
             if (item != null && item.IsInteractable)
             {
+                AudioManager.Instance.StartPlaySound("sfx_03_08", false);
                 currentItem = item as Item;
                 isDragging = true;
                 offset = currentItem.transform.position - mousePos;
@@ -99,12 +100,16 @@ public class InteractionController : SingletonMono<InteractionController>
         {
             if (FlowController.Instance.CurrentState == GameFlowState.Success)
             {
+                AudioManager.Instance.StartPlaySound("sfx_10_12", false);
                 FlowController.Instance.ShowCaseTruth();
             }
-            else if (FlowController.Instance.CurrentState == GameFlowState.Death)
+            else if (FlowController.Instance.CurrentState == GameFlowState.CaseFail)
             {
-                GameManager.Instance.RetryCurrentCase();
-                UIManager.Instance.HidePanel("death_panel");
+                AudioManager.Instance.StartPlaySound("sfx_13", false, (audio) =>
+                {
+                    GameManager.Instance.RetryCurrentCase();
+                    UIManager.Instance.HidePanel("death_panel");
+                });
             }
         }
     }
@@ -177,6 +182,7 @@ public class InteractionController : SingletonMono<InteractionController>
     public void AcceptCurrentDrop()
     {
         if (currentItem == null) return;
+        AudioManager.Instance.StartPlaySound("sfx_04_05_06", false);
         currentItem.OnDragEnd(true);
         currentItem = null;
         isDragging = false;
