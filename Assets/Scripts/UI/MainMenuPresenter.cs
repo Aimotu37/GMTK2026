@@ -11,6 +11,7 @@ public sealed class MainMenuPresenter : MonoBehaviour
     {
         _panel = GetComponent<MainMenuPanel>();
         RegisterEvents();
+        _panel.SetContinueBTNInteractble(SaveManager.Instance.HasGameSavedData());
     }
 
     private void OnDestroy()
@@ -52,8 +53,6 @@ public sealed class MainMenuPresenter : MonoBehaviour
             print("Load SavedData Faild");
             return;
         }
-
-        //GameManager.Instance.ContinueGame();
     }
 
     private void HandleSettingsClicked()

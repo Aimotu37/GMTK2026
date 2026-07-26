@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR;
 
 public class CaseBoradPresenter : MonoBehaviour
 {
@@ -31,6 +32,7 @@ public class CaseBoradPresenter : MonoBehaviour
         if (_panel != null)
         {
             _panel.OnTruthClicked -= HandleTruthClick;
+            _panel.OnSettingClicked -= HandleSettingClicked;
         }
     }
 
@@ -43,6 +45,7 @@ public class CaseBoradPresenter : MonoBehaviour
         }
 
         _panel.OnTruthClicked += HandleTruthClick;
+        _panel.OnSettingClicked += HandleSettingClicked;
     }
 
     private void SetClue(ItemData item)
@@ -61,6 +64,11 @@ public class CaseBoradPresenter : MonoBehaviour
     private void CheckTruthInteractable(bool interactable)
     {
         _panel.SetTruthInteractable(interactable);
+    }
+
+    private void HandleSettingClicked()
+    {
+        UIManager.Instance.ShowPanel<SettingPanel>("main_setting_panel");
     }
 
     private void HandleTruthClick()

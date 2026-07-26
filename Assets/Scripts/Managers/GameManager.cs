@@ -15,17 +15,35 @@ public enum GameState
     GameOver,
     GameVictory
 }
-public class GameManager : SingletonMono<GameManager>
+public class GameManager : SingletonMono<GameManager>, ISaveable
 {
-    private GameState _currentState = GameState.MainMenu;
-    public GameState CurrentState => _currentState;
-
-    public CaseDataSO CurrentCaseData => _currentCaseData;
-
+    public string SavedId => "Game_Saved";
     private const int DEFAULT_WORDS = 4;
-
+    private List<int> allCaseIds = new List<int>() { 1001, 1002, 1003 };
     //每次发言后触发诅咒的概率（0~1），不是每次都触发
     private const float DEBUFF_TRIGGER_CHANCE = 0.2f;
+    //游戏运行变量
+    //运行时保存变量
+    //案件数据相关
+    private int _currentCaseId;
+    private int _currentCaseIndex;
+    private int _iscurrentCasePassed;
+    private bool _gameCompleted;
+
+    //运行时不保存变量
+    //对话次数
+    private int _currentWords;
+    private GameState _currentState;
+    private int latestItemId;
+    private int _currentDebuffId;
+    //线索相关
+    private List<int> _gotCaseItemIds = new List<int>();
+
+    public GameState CurrentState => _currentState;
+    public List<int> GotCaseItemIds => _gotCaseItemIds;
+    public CaseDataSO CurrentCaseData => _currentCaseData;
+    public int LatestItemId => latestItemId;
+    public int CurrentCaseIndex => _currentCaseIndex;
 
     //单局游戏变量
     private CaseDataSO _currentCaseData;
@@ -35,26 +53,11 @@ public class GameManager : SingletonMono<GameManager>
     private DebuffDataSO _debuff;
 
     private Dictionary<int, ItemData> _items = new Dictionary<int, ItemData>();
-    public Dictionary<int, ItemData> Items => _items;
     private Dictionary<int, OptionData> _options = new Dictionary<int, OptionData>();
+
+    public Dictionary<int, ItemData> Items => _items;
     public Dictionary<int, OptionData> Options => _options;
 
-    //对话次数
-    private int _currentWords = DEFAULT_WORDS;
-    //案件数据相关
-    private List<int> allCaseIds = new List<int>() { 1001, 1002, 1003 };
-    //private List<int> allCaseIds = new List<int>() { 1001 };//test
-    private int _currentCaseId;
-    private int _currentCaseIndex;
-    public int CurrentCaseIndex => _currentCaseIndex;
-    private int _iscurrentCasePassed;
-    //线索相关
-    private List<int> _gotCaseItemIds = new List<int>();
-    public List<int> GotCaseItemIds => _gotCaseItemIds;
-    private int latestItemId;
-    public int LatestItemId => latestItemId;
-    //当前buff
-    private int _currentDebuffId;
 
     private bool _isCorrect;
 
@@ -89,6 +92,9 @@ public class GameManager : SingletonMono<GameManager>
         else
         {
             _isInitialized = true;
+            _currentState = GameState.MainMenu;
+            _currentWords = DEFAULT_WORDS;
+            (this as ISaveable).RegisterSaveable();
             Debug.Log(this.name + " Initialization Successful.");
         }
     }
@@ -135,6 +141,7 @@ public class GameManager : SingletonMono<GameManager>
             flow = FlowController.Instance;
             flow.FlowInit();
             CaptureSceneSnapshot();
+            SaveManager.Instance.SaveGameData();
         });
         SwitchGameState(GameState.Playing);
     }
@@ -201,10 +208,17 @@ public class GameManager : SingletonMono<GameManager>
         return _currentCaseIndex >= allCaseIds.Count - 1;
     }
 
+    public bool IsValidCaseId(int caseId)
+    {
+        return allCaseIds.Contains(caseId);
+    }
+
     public void NextCase()
     {
         if (IsLastCase())
         {
+            _gameCompleted = true;
+            SaveManager.Instance.SaveGameData();
             flow.FlowStateChange(GameFlowState.TrueEnd);
             return;
         }
@@ -228,6 +242,7 @@ public class GameManager : SingletonMono<GameManager>
             flow = FlowController.Instance;
             flow.FlowInit();
             CaptureSceneSnapshot();
+            SaveManager.Instance.SaveGameData();
         });
     }
 
@@ -265,7 +280,26 @@ public class GameManager : SingletonMono<GameManager>
         SwitchGameState(GameState.MainMenu);
         ScenesManager.Instance.LoadSceneAsync(Scenes.MainMenuSceneName, () =>
         {
+            UIManager.Instance.HidePanel("demon_panel");
+            UIManager.Instance.HidePanel("case_board_panel");
             UIManager.Instance.ShowPanel<MainMenuPanel>("main_menu_panel");
+        });
+    }
+
+    public void LoadEndingScene()
+    {
+        Time.timeScale = 1f;
+        SwitchGameState(GameState.GameVictory);
+        ScenesManager.Instance.SwitchGameScene(Scenes.EndingSceneName, sceneLoaded =>
+        {
+            if (!sceneLoaded)
+            {
+                Debug.LogError($"Failed to load ending scene {Scenes.EndingSceneName}.");
+                LoadMainMenu();
+                return;
+            }
+
+            UIManager.Instance.HidePanel("main_menu_panel");
         });
     }
 
@@ -405,12 +439,18 @@ public class GameManager : SingletonMono<GameManager>
     /// <summary>随机取一条恶魔被击败发言（真结局用），不触发事件，交给调用方自行展示</summary>
     public string GetRandomDefeatSpeak()
     {
-        if (_demonSpeak == null || _demonSpeak.demonSpeakDatas == null || _demonSpeak.demonSpeakDatas.Count == 0)
+        DemonSpeakDataSO demonSpeak = _demonSpeak;
+        if (demonSpeak == null && DataManager.Instance != null)
+        {
+            demonSpeak = DataManager.Instance.GetDemonSpeak();
+        }
+
+        if (demonSpeak == null || demonSpeak.demonSpeakDatas == null || demonSpeak.demonSpeakDatas.Count == 0)
         {
             return string.Empty;
         }
-        int index = Random.Range(0, _demonSpeak.demonSpeakDatas.Count);
-        return _demonSpeak.demonSpeakDatas[index].defeatSpeak;
+        int index = Random.Range(0, demonSpeak.demonSpeakDatas.Count);
+        return demonSpeak.demonSpeakDatas[index].defeatSpeak;
     }
     /* public void DemonDefeatSpeak()
      {
@@ -476,6 +516,35 @@ public class GameManager : SingletonMono<GameManager>
             yield return PlayLineAndWaitForContinue(panel, line);
         }
 
+        UIManager.Instance.HidePanel("story_dialogue_panel");
+        onComplete?.Invoke();
+    }
+
+    public void PlayEndingStory(Action onComplete)
+    {
+        StartCoroutine(PlayEndingStoryRoutine(onComplete));
+    }
+
+    private IEnumerator PlayEndingStoryRoutine(Action onComplete)
+    {
+        string endingLine = GetRandomDefeatSpeak();
+        if (string.IsNullOrEmpty(endingLine))
+        {
+            Debug.LogWarning("PlayEndingStory: 未找到有效的结局台词，返回主菜单。");
+            onComplete?.Invoke();
+            yield break;
+        }
+
+        StoryDialoguePanel panel = null;
+        yield return GetOrLoadStoryDialoguePanel(p => panel = p);
+        if (panel == null)
+        {
+            Debug.LogWarning("PlayEndingStory: 未找到 story_dialogue_panel，返回主菜单。");
+            onComplete?.Invoke();
+            yield break;
+        }
+
+        yield return PlayLineAndWaitForContinue(panel, endingLine);
         UIManager.Instance.HidePanel("story_dialogue_panel");
         onComplete?.Invoke();
     }
@@ -595,6 +664,9 @@ public class GameManager : SingletonMono<GameManager>
         _currentCaseIndex = 0;
         _currentCaseId = allCaseIds[_currentCaseIndex];
         _currentWords = DEFAULT_WORDS;
+        _gameCompleted = false;
+        latestItemId = 0;
+        _currentDebuffId = 0;
 
         _items.Clear();
         _options.Clear();
@@ -667,5 +739,85 @@ public class GameManager : SingletonMono<GameManager>
     {
         if (flow == null) flow = FlowController.Instance;
         flow.ShowSuccess(_currentCaseId);
+    }
+
+    public ISavedData SaveData()
+    {
+        if (!allCaseIds.Contains(_currentCaseId) ||
+            (ScenesManager.Instance != null && ScenesManager.Instance.IsSwitching))
+        {
+            Debug.LogWarning("Game progress cannot be saved before a case is ready.");
+            return null;
+        }
+
+        return new GameProgressSavedData
+        {
+            currentCaseId = _currentCaseId,
+            gameCompleted = _gameCompleted
+        };
+    }
+
+    public void LoadData(ISavedData data)
+    {
+        if (!(data is GameProgressSavedData gameData))
+        {
+            Debug.LogError("Game save data has an invalid type.");
+            return;
+        }
+
+        int caseIndex = allCaseIds.IndexOf(gameData.currentCaseId);
+        if (caseIndex < 0)
+        {
+            Debug.LogError("Game save data contains invalid progress values.");
+            return;
+        }
+
+        _currentCaseId = gameData.currentCaseId;
+        _currentCaseIndex = caseIndex;
+        _currentWords = DEFAULT_WORDS;
+        _gameCompleted = gameData.gameCompleted;
+        latestItemId = 0;
+        _currentDebuffId = 0;
+        _items.Clear();
+        _options.Clear();
+        _gotCaseItemIds.Clear();
+        _sceneSnapshots.Clear();
+
+        if (_gameCompleted)
+        {
+            LoadEndingScene();
+            return;
+        }
+
+        PrepareCaseData(_currentCaseId);
+
+        if (InputManager.Instance != null)
+            InputManager.Instance.SetInputEnabled(false);
+
+        string sceneName = Scenes.CaseScenePrefix + _currentCaseId;
+        ScenesManager.Instance.SwitchGameScene(sceneName, sceneLoaded =>
+        {
+            if (!sceneLoaded)
+            {
+                Debug.LogError($"Failed to load saved case scene {sceneName}.");
+                LoadMainMenu();
+                return;
+            }
+
+            speakerZone = FindAnyObjectByType<SpeakerZone>();
+            interaction = InteractionController.Instance;
+            if (speakerZone == null || interaction == null)
+            {
+                Debug.LogError("Saved case scene is missing its interaction objects.");
+                LoadMainMenu();
+                return;
+            }
+
+            interaction.SetSpeakerZone(speakerZone);
+            flow = FlowController.Instance;
+            flow.FlowInit(playIntroStory: true);
+            CaptureSceneSnapshot();
+            SwitchGameState(GameState.Playing);
+        });
     }
 }

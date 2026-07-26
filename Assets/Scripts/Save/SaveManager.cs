@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 public class SaveManager : SingletonMono<SaveManager>
 {
-    private const int CurrentSaveVersion = 1;
+    private const int CurrentSaveVersion = 3;
     private const string SaveFileName = "save.sav";
     private const string TempSaveFileName = "temp.sav";
 
@@ -122,7 +122,7 @@ public class SaveManager : SingletonMono<SaveManager>
             string json = File.ReadAllText(path);
             var data = JsonConvert.DeserializeObject<SavedFileData>(json, SerializerSettings);
 
-            if (data == null || data.savedDataDictionary == null || data.saveVersion > CurrentSaveVersion)
+            if (data == null || data.savedDataDictionary == null || data.saveVersion != CurrentSaveVersion)
             {
                 Debug.LogError("Invalid or unsupported save version.");
                 return false;
@@ -146,7 +146,28 @@ public class SaveManager : SingletonMono<SaveManager>
 
     public bool HasGameSavedData()
     {
-        return File.Exists(GetSaveFilePath());
+        string path = GetSaveFilePath();
+        if (!File.Exists(path)) return false;
+
+        try
+        {
+            string json = File.ReadAllText(path);
+            var data = JsonConvert.DeserializeObject<SavedFileData>(json, SerializerSettings);
+            if (data == null ||
+                data.saveVersion != CurrentSaveVersion ||
+                data.savedDataDictionary == null ||
+                !data.savedDataDictionary.TryGetValue("Game_Saved", out ISavedData savedData))
+            {
+                return false;
+            }
+
+            return savedData is GameProgressSavedData gameData &&
+                   GameManager.Instance.IsValidCaseId(gameData.currentCaseId);
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     public bool DeleteGameData()

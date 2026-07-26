@@ -12,15 +12,16 @@ public class SavedFileData
 public interface ISavedData { }
 
 [Serializable]
-public sealed class GameProgressSavedData : ISavedData
+public sealed class SettingsSavedData
 {
-    public string currentChapterId;
-    public string currentGameSceneId;
+    public int version = 1;
+    public float bgmVolume = 0.7f;
+    public float sfxVolume = 0.4f;
 }
 
 [Serializable]
-public sealed class AudioSavedData : ISavedData
+public sealed class GameProgressSavedData : ISavedData
 {
-    public float bgmVolume;
-    public float sfxVolume;
+    public int currentCaseId;
+    public bool gameCompleted;
 }

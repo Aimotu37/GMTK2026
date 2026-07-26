@@ -18,20 +18,20 @@ public enum GameFlowState
 
 public class FlowController : SingletonMono<FlowController>
 {
-    [SerializeField]
-    private GameFlowState _currentState;
-    public GameFlowState CurrentState => _currentState;
-    /// <summary>当前是否处于"点击空白处继续"的等待状态（成功页看真相 / 死亡页重试）</summary>  
-    public bool IsWaitForClickEmpty => _currentState == GameFlowState.Success || _currentState == GameFlowState.CaseFail;
-
     //流程运行变量
+    //运行时保存变量
+
+    //运行时不需保存变量，在案例启动时初始化
+    private GameFlowState _currentState;
+    private int _currentCase;
+    private bool _skipIntroStory;
+    public bool IsWaitForClickEmpty => _currentState == GameFlowState.Success || _currentState == GameFlowState.CaseFail;
     private float clueDuration = 1.5f;
     private float demonSpeakInterval = 10.0f;
     private string _pendingClueText;
-    private int _currentCase;
     private Coroutine demonSpeak;
-    private bool _skipIntroStory;
 
+    public GameFlowState CurrentState => _currentState;
 
     /// <summary>
     /// 初始化流程；playIntroStory 为 false 时跳过案件剧情播放，直接进入探索（用于重试当前案件）
@@ -205,7 +205,7 @@ public class FlowController : SingletonMono<FlowController>
 
         bool requestCompleted = false;
         bool panelOpened = false;
-        BasePanel tempPanel = new BasePanel();
+        BasePanel tempPanel = null;
 
         UIManager.Instance.ShowPanel<CluePanel>("clue_panel", E_UILayer.MiddleLayer, (panel) =>
         {
@@ -307,30 +307,10 @@ public class FlowController : SingletonMono<FlowController>
 
     private IEnumerator HandleTrueEnd()
     {
-
-        // 结局页面复用通用剧情对话框，播放恶魔被击败发言（DemonSpeakConfig.DefeatSpeak）
         UIManager.Instance.HidePanel("case_board_panel");
         UIManager.Instance.HidePanel("demon_panel");
-
-        string speak = GameManager.Instance.GetRandomDefeatSpeak();
-        if (string.IsNullOrEmpty(speak))
-        {
-            yield break;
-        }
-
-        StoryDialoguePanel panel = null;
-        yield return GameManager.Instance.GetOrLoadStoryDialoguePanel(p => panel = p);
-
-        if (panel == null)
-        {
-            Debug.LogWarning("HandleTrueEnd: 未找到 story_dialogue_panel，无法播放结局发言。");
-            yield break;
-        }
-
-        // TODO: 美术资源到位后调用 panel.SetPortrait(恶魔被击败立绘) / panel.SetBackground(结局背景)
-        panel.PlayLine(speak, null);
-        // 内容已经开始打字，如果屏幕还是黑的（从上一步真相弹窗渐黑切过来），这里渐显揭幕
-        yield return GameManager.Instance.FadeInScreenIfNeeded();
+        GameManager.Instance.LoadEndingScene();
+        yield break;
     }
 
     private void ShowClueAnimation(string clue)

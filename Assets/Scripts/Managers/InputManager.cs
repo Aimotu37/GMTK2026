@@ -5,7 +5,6 @@ using UnityEngine;
 public class InputManager : SingletonMono<InputManager>
 {
     private bool _isInputEnabled = true;
-    private bool _isGameInputEnable;
 
     private bool _isInitialized;
     public bool IsInitialized => _isInitialized;
@@ -32,16 +31,6 @@ public class InputManager : SingletonMono<InputManager>
             SetInputEnabled(false);
             Debug.Log(this.name + " Initialization Successful.");
         }
-    }
-
-    private void OnEnable()
-    {
-
-    }
-
-    private void OnDisable()
-    {
-
     }
 
     public void SetInputEnabled(bool enabled)
