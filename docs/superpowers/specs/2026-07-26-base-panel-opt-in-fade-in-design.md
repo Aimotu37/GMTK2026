@@ -8,7 +8,7 @@ Make the case-success and case-failure panels fade in when they appear, while ke
 
 - Add reusable, opt-in fade-in behavior directly to `BasePanel`.
 - Enable the behavior only on `SuccessPanel.prefab` and `DeathPanel.prefab`.
-- Reuse the root `CanvasGroup` already present on both prefabs.
+- Add a root `CanvasGroup` to both prefabs. Their existing `CanvasGroup` components belong to child text objects and cannot fade the whole panel.
 - Do not add fade-out behavior.
 - Do not change `FlowController`, `SuccessPanel`, `DeathPanel`, or their presenters unless implementation reveals a compile-time requirement.
 
@@ -30,6 +30,8 @@ Enable the opt-in flag on:
 - `Assets/Prefabs/UI/DeathPanel.prefab`
 
 Both panels use the same initial recommended duration of `0.3` seconds. The serialized duration remains editable per prefab for visual tuning without code changes.
+
+Each prefab also receives a `CanvasGroup` on the same root object as its `SuccessPanel` or `DeathPanel` component. Existing child-level groups remain unchanged because they serve separate text-level behavior.
 
 ## Data Flow
 
