@@ -118,6 +118,8 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
 
     private void OnDestroy()
     {
+        ClearSceneSnapshots();
+
         foreach (AsyncOperationHandle<Sprite> handle in _portraitHandles.Values)
         {
             if (handle.IsValid())
@@ -316,7 +318,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
 
         _gotCaseItemIds.Clear();
 
-        _sceneSnapshots.Clear();
+        ClearSceneSnapshots();
         PrepareCaseData(_currentCaseId);
         string sceneName = _currentCaseConfig.SceneName;
         ScenesManager.Instance?.SwitchGameScene(sceneName, sceneLoaded =>
@@ -398,6 +400,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
     internal void LoadMainMenuImmediately(Action<bool> onLoaded)
     {
         Time.timeScale = 1f;
+        ClearSceneSnapshots();
         SwitchGameState(GameState.MainMenu);
         ScenesManager.Instance.SwitchGameScene(Scenes.MainMenuSceneName, sceneLoaded =>
         {
@@ -449,6 +452,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         }
 
         yield return fader.FadeOut(0.5f);
+        ClearSceneSnapshots();
         ScenesManager.Instance.SwitchGameScene(Scenes.OpeningSceneName, sceneLoaded =>
         {
             if (!sceneLoaded)
@@ -482,6 +486,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
 
         yield return fader.FadeOut(0.5f);
         Time.timeScale = 1f;
+        ClearSceneSnapshots();
         SwitchGameState(GameState.GameVictory);
         ScenesManager.Instance.SwitchGameScene(Scenes.EndingSceneName, sceneLoaded =>
         {
@@ -547,6 +552,19 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
             clone.transform.SetParent(root.transform, false);
         }
         _sceneSnapshots[active.name] = root;
+    }
+
+    private void ClearSceneSnapshots()
+    {
+        foreach (GameObject snapshotRoot in _sceneSnapshots.Values)
+        {
+            if (snapshotRoot != null)
+            {
+                Destroy(snapshotRoot);
+            }
+        }
+
+        _sceneSnapshots.Clear();
     }
 
     public void CheckWord(int itemId)
@@ -1049,7 +1067,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
 
         _gotCaseItemIds.Clear();
 
-        _sceneSnapshots.Clear();
+        ClearSceneSnapshots();
     }
     // ============ 以下方法仅供 DebugTestHelper 测试使用，不参与正式游戏流程 ============
 
@@ -1076,7 +1094,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         _items.Clear();
         _options.Clear();
         _gotCaseItemIds.Clear();
-        _sceneSnapshots.Clear();
+        ClearSceneSnapshots();
 
         PrepareCaseData(_currentCaseId);
         ScenesManager.Instance?.LoadSceneAsync(_currentCaseConfig.SceneName, () =>
@@ -1159,7 +1177,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         _items.Clear();
         _options.Clear();
         _gotCaseItemIds.Clear();
-        _sceneSnapshots.Clear();
+        ClearSceneSnapshots();
 
         if (_gameCompleted)
         {
