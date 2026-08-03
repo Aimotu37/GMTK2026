@@ -48,13 +48,15 @@ public class OptionPanel : BasePanel
         }
     }
 
-    public Dictionary<string, int> InitButtonText(List<OptionData> options)
+    public Dictionary<string, int> InitButtonText(
+        IReadOnlyList<OptionsConfig> options,
+        IReadOnlyList<string> localizedTexts)
     {
         Dictionary<string, int> buttonBindOptionId = new Dictionary<string, int>();
         for (int i = 0; i < buttons.Count; i++)
         {
-            buttons[i].GetComponentInChildren<TMP_Text>().text = options[i].optionText;
-            buttonBindOptionId.Add(buttons[i].name, options[i].optionID);
+            buttons[i].GetComponentInChildren<TMP_Text>().text = localizedTexts[i];
+            buttonBindOptionId.Add(buttons[i].name, options[i].OptionId);
         }
         return buttonBindOptionId;
     }

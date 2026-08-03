@@ -295,6 +295,7 @@ GameObject:
   - component: {fileID: 3915693485637856521}
   - component: {fileID: 856702074495442444}
   - component: {fileID: 6975074599213130065}
+  - component: {fileID: 910000000000000007}
   m_Layer: 5
   m_Name: DebuffName
   m_TagString: Untagged
@@ -927,3 +928,16 @@ MonoBehaviour:
   particleDistance: 42
   particleSize: 8
   particleColor: {r: 1, g: 0.18, b: 0.08, a: 1}
+--- !u!114 &910000000000000007
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1693378440653560509}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c1f2d4a9e6b43d5a8c017f2b4e9d631, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  _localizationKey: demon.curse_title

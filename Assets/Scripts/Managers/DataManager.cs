@@ -2,33 +2,24 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 [Serializable]
 
 public class DataManager : SingletonMono<DataManager>
 {
-
-    private const int CaseCount = 3;
-    private List<string> caseKeys = new List<string>() { "config/case_1001", "config/case_1002", "config/case_1003" };
-    private List<string> itemKeys = new List<string>() { "config/items_1001", "config/items_1002", "config/items_1003" };
-    private List<string> optionKeys = new List<string>() { "config/options_1001", "config/options_1002", "config/options_1003" };
-
-    private Dictionary<int, CaseDataSO> _caseConfigCache = new Dictionary<int, CaseDataSO>();
-    private Dictionary<int, ItemDataSO> _itemConfigCache = new Dictionary<int, ItemDataSO>();
-    private Dictionary<int, OptionDataSO> _optionConfigCache = new Dictionary<int, OptionDataSO>();
-    private DemonSpeakDataSO _demonSpeakConfigCache;
-    private DebuffDataSO _debuffConfigCache;
+    private const string GameContentTableName = "GameContent";
+    private const string UiTableName = "UI";
+    private readonly GameConfigLoader _gameConfigLoader = new GameConfigLoader();
 
     //初始化变量
     private bool _isInitialized;
     public bool IsInitialized => _isInitialized;
-
-    private bool _initFailed;
-    private bool _cachedCases;
-    private bool _cachedItems;
-    private bool _cachedOptions;
-    private bool _cachedDemonSpeaks;
-    private bool _cachedDebuffs;
+    public GameConfigSnapshot ConfigSnapshot { get; private set; }
+    public string CurrentLocaleCode => LocalizationSettings.SelectedLocale?.Identifier.Code;
+    public event Action<string> LocaleChanged;
 
     public IEnumerator InitializeAsync()
     {
@@ -37,115 +28,259 @@ public class DataManager : SingletonMono<DataManager>
             yield break;
         }
 
-        _initFailed = false;
-        _cachedCases = false;
-        _cachedItems = false;
-        _cachedOptions = false;
-        _cachedDemonSpeaks = false;
-        _cachedDebuffs = false;
+        ConfigSnapshot = null;
 
-        if (!_cachedCases)
+        IEnumerator configLoading = _gameConfigLoader.Load();
+        try
         {
-            foreach (var key in caseKeys)
+            while (configLoading.MoveNext())
             {
-                LoadConfig<CaseDataSO>(key);
+                yield return configLoading.Current;
             }
         }
-        if (!_cachedItems)
+        finally
         {
-            foreach (var key in itemKeys)
-            {
-                LoadConfig<ItemDataSO>(key);
-            }
-        }
-        if (!_cachedOptions)
-        {
-            foreach (var key in optionKeys)
-            {
-                LoadConfig<OptionDataSO>(key);
-            }
-        }
-        if (!_cachedDemonSpeaks)
-        {
-            LoadConfig<DemonSpeakDataSO>("config/demon_speaks");
-        }
-        if (!_cachedDebuffs)
-        {
-            LoadConfig<DebuffDataSO>("config/debuffs");
+            (configLoading as IDisposable)?.Dispose();
         }
 
-        yield return new WaitUntil(() => _cachedCases && _cachedItems && _cachedOptions && _cachedDemonSpeaks && _cachedDebuffs);
-
-        if (_initFailed)
+        if (!_gameConfigLoader.IsLoaded)
         {
-            _isInitialized = false;
-            Debug.LogError(this.name + " Initialization Failed.");
+            throw new InvalidOperationException("Game config loading did not complete.");
+        }
+
+        ConfigSnapshot = _gameConfigLoader.Snapshot;
+        _isInitialized = true;
+        Debug.Log(this.name + " Initialization Successful.");
+    }
+
+    public CaseConfig GetCaseConfig(int caseId)
+    {
+        GameConfigSnapshot snapshot = RequireConfigSnapshot();
+        if (!snapshot.Cases.TryGetValue(caseId, out CaseConfig config))
+        {
+            throw new KeyNotFoundException($"Case config {caseId} does not exist.");
+        }
+
+        return config;
+    }
+
+    public IReadOnlyList<ItemsConfig> GetItemConfigs(int caseId)
+    {
+        GameConfigSnapshot snapshot = RequireConfigSnapshot();
+        GetCaseConfig(caseId);
+
+        var result = new List<ItemsConfig>();
+        foreach (ItemsConfig config in snapshot.Items.Values)
+        {
+            if (config.CaseId == caseId)
+            {
+                result.Add(config);
+            }
+        }
+
+        result.Sort((left, right) => left.DisplayOrder.CompareTo(right.DisplayOrder));
+        return result.AsReadOnly();
+    }
+
+    public IReadOnlyList<OptionsConfig> GetOptionConfigs(int caseId)
+    {
+        GameConfigSnapshot snapshot = RequireConfigSnapshot();
+        GetCaseConfig(caseId);
+
+        var result = new List<OptionsConfig>();
+        foreach (OptionsConfig config in snapshot.Options.Values)
+        {
+            if (config.CaseId == caseId)
+            {
+                result.Add(config);
+            }
+        }
+
+        result.Sort((left, right) => left.DisplayOrder.CompareTo(right.DisplayOrder));
+        return result.AsReadOnly();
+    }
+
+    public DemonLinesConfig GetDemonLinesConfig(int demonId)
+    {
+        GameConfigSnapshot snapshot = RequireConfigSnapshot();
+        if (!snapshot.DemonLines.TryGetValue(demonId, out DemonLinesConfig config))
+        {
+            throw new KeyNotFoundException($"Demon lines config {demonId} does not exist.");
+        }
+
+        return config;
+    }
+
+    public DebuffConfig GetDebuffConfig(int debuffId)
+    {
+        GameConfigSnapshot snapshot = RequireConfigSnapshot();
+        if (!snapshot.Debuffs.TryGetValue(debuffId, out DebuffConfig config))
+        {
+            throw new KeyNotFoundException($"Debuff config {debuffId} does not exist.");
+        }
+
+        return config;
+    }
+
+    public DialogueConfig GetDialogueConfig(int dialogueId)
+    {
+        GameConfigSnapshot snapshot = RequireConfigSnapshot();
+        if (!snapshot.Dialogues.TryGetValue(dialogueId, out DialogueConfig config))
+        {
+            throw new KeyNotFoundException($"Dialogue config {dialogueId} does not exist.");
+        }
+
+        return config;
+    }
+
+    public IReadOnlyList<DemonLinesConfig> GetDemonLinesConfigs()
+    {
+        GameConfigSnapshot snapshot = RequireConfigSnapshot();
+        var result = new List<DemonLinesConfig>(snapshot.DemonLines.Values);
+        result.Sort((left, right) => left.DemonId.CompareTo(right.DemonId));
+        return result.AsReadOnly();
+    }
+
+    public IReadOnlyList<DebuffConfig> GetDebuffConfigs()
+    {
+        GameConfigSnapshot snapshot = RequireConfigSnapshot();
+        var result = new List<DebuffConfig>(snapshot.Debuffs.Values);
+        result.Sort((left, right) => left.DebuffId.CompareTo(right.DebuffId));
+        return result.AsReadOnly();
+    }
+
+    public IReadOnlyList<DialogueConfig> GetOpeningDialogues()
+    {
+        GameConfigSnapshot snapshot = RequireConfigSnapshot();
+        var result = new List<DialogueConfig>();
+
+        foreach (DialogueConfig config in snapshot.Dialogues.Values)
+        {
+            if (config.DialogueType == DialogueType.Opening)
+            {
+                result.Add(config);
+            }
+        }
+
+        result.Sort((left, right) => left.Sequence.CompareTo(right.Sequence));
+        return result.AsReadOnly();
+    }
+
+    public IEnumerator GetLocalizedTextAsync(
+        string localizationKey,
+        Action<string> onCompleted)
+    {
+        return GetLocalizedTextAsync(
+            GameContentTableName,
+            localizationKey,
+            onCompleted);
+    }
+
+    public IEnumerator GetLocalizedUiTextAsync(
+        string localizationKey,
+        Action<string> onCompleted)
+    {
+        return GetLocalizedTextAsync(
+            UiTableName,
+            localizationKey,
+            onCompleted);
+    }
+
+    private IEnumerator GetLocalizedTextAsync(
+        string tableName,
+        string localizationKey,
+        Action<string> onCompleted)
+    {
+        if (string.IsNullOrWhiteSpace(localizationKey))
+        {
+            throw new ArgumentException(
+                "Localization key cannot be null or empty.",
+                nameof(localizationKey));
+        }
+
+        string localizedText = localizationKey;
+        bool isCompleted = false;
+        AsyncOperationHandle<string> handle =
+            LocalizationSettings.StringDatabase.GetLocalizedStringAsync(
+                tableName,
+                localizationKey);
+
+        Action<AsyncOperationHandle<string>> complete = operation =>
+        {
+            if (operation.Status == AsyncOperationStatus.Succeeded)
+            {
+                localizedText = operation.Result;
+            }
+            else
+            {
+                Debug.LogWarning($"Failed to localize key '{localizationKey}'.");
+            }
+
+            isCompleted = true;
+        };
+
+        if (handle.IsDone)
+        {
+            complete(handle);
         }
         else
         {
-            _isInitialized = true;
-            Debug.Log(this.name + " Initialization Successful.");
+            handle.Completed += complete;
         }
+
+        yield return new WaitUntil(() => isCompleted);
+        onCompleted?.Invoke(localizedText);
     }
 
-    public CaseDataSO GetCase(int caseID)
+    public IEnumerator SetLocaleAsync(
+        string localeCode,
+        Action<bool> onCompleted = null)
     {
-        return _caseConfigCache[caseID];
-    }
-
-    public ItemDataSO GetItems(int caseID)
-    {
-        return _itemConfigCache[caseID];
-    }
-
-    public OptionDataSO GetOptions(int caseID)
-    {
-        return _optionConfigCache[caseID];
-    }
-
-    public DemonSpeakDataSO GetDemonSpeak()
-    {
-        return _demonSpeakConfigCache;
-    }
-
-    public DebuffDataSO GetDebuffData()
-    {
-        return _debuffConfigCache;
-    }
-
-    private void LoadConfig<T>(string configkey) where T : ScriptableObject
-    {
-        ResourcesManager.Instance.AddressablesLoadAsync<T>(configkey, (T) =>
+        if (string.IsNullOrWhiteSpace(localeCode))
         {
-            if (T is CaseDataSO caseData)
-            {
-                _caseConfigCache.Add(caseData.caseID, caseData);
-                _cachedCases = _caseConfigCache.Count == CaseCount;
-            }
+            Debug.LogWarning("Locale code cannot be null or empty.");
+            onCompleted?.Invoke(false);
+            yield break;
+        }
 
-            if (T is ItemDataSO itemData)
-            {
-                _itemConfigCache.Add(itemData.caseID, itemData);
-                _cachedItems = _itemConfigCache.Count == CaseCount;
-            }
+        AsyncOperationHandle<LocalizationSettings> initialization =
+            LocalizationSettings.InitializationOperation;
+        if (!initialization.IsDone)
+        {
+            yield return initialization;
+        }
 
-            if (T is OptionDataSO optionData)
-            {
-                _optionConfigCache.Add(optionData.caseID, optionData);
-                _cachedOptions = _optionConfigCache.Count == CaseCount;
-            }
+        if (initialization.Status != AsyncOperationStatus.Succeeded)
+        {
+            Debug.LogWarning("Localization initialization failed.");
+            onCompleted?.Invoke(false);
+            yield break;
+        }
 
-            if (T is DemonSpeakDataSO demonSpeakData)
-            {
-                _demonSpeakConfigCache = demonSpeakData;
-                _cachedDemonSpeaks = true;
-            }
+        Locale locale = LocalizationSettings.AvailableLocales.GetLocale(localeCode);
+        if (locale == null)
+        {
+            Debug.LogWarning($"Locale '{localeCode}' is not available.");
+            onCompleted?.Invoke(false);
+            yield break;
+        }
 
-            if (T is DebuffDataSO debuffData)
-            {
-                _debuffConfigCache = debuffData;
-                _cachedDebuffs = true;
-            }
-        });
+        if (LocalizationSettings.SelectedLocale != locale)
+        {
+            LocalizationSettings.SelectedLocale = locale;
+            LocaleChanged?.Invoke(locale.Identifier.Code);
+        }
+
+        onCompleted?.Invoke(true);
+    }
+
+    private GameConfigSnapshot RequireConfigSnapshot()
+    {
+        if (ConfigSnapshot == null)
+        {
+            throw new InvalidOperationException("Game config has not been initialized.");
+        }
+
+        return ConfigSnapshot;
     }
 }

@@ -17,6 +17,7 @@ public sealed class SettingsSavedData
     public int version = 1;
     public float bgmVolume = 0.7f;
     public float sfxVolume = 0.4f;
+    public string languageCode = "zh-Hans";
 }
 
 [Serializable]

@@ -29,13 +29,31 @@ public class OptionPresenter : MonoBehaviour
 
     private void OnPanelShown()
     {
-        List<OptionData> options = new List<OptionData>();
+        StartCoroutine(InitializeOptions());
+    }
+
+    private IEnumerator InitializeOptions()
+    {
+        var options = new List<OptionsConfig>();
         AudioManager.Instance.StartPlaySound("sfx_03_08", false);
-        foreach (var option in GameManager.Instance.Options.Values)
+        foreach (OptionsConfig option in GameManager.Instance.Options.Values)
         {
             options.Add(option);
         }
-        buttonBindOptionId = _panel.InitButtonText(options);
+
+        options.Sort((left, right) => left.DisplayOrder.CompareTo(right.DisplayOrder));
+
+        var localizedTexts = new List<string>(options.Count);
+        foreach (OptionsConfig option in options)
+        {
+            string localizedText = option.TextKey;
+            yield return DataManager.Instance.GetLocalizedTextAsync(
+                option.TextKey,
+                value => localizedText = value);
+            localizedTexts.Add(localizedText);
+        }
+
+        buttonBindOptionId = _panel.InitButtonText(options, localizedTexts);
     }
 
     private void RegisterEvents()

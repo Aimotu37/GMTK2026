@@ -1,12 +1,10 @@
 using System;
-using Unity.Mathematics;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic;
 
 public class SettingPanel : BasePanel
 {
-    private const string AboutUsButtonName = "AboutUsButton";
     private const string BackButtonName = "BackButton";
     private const string BackToMainButtonName = "BackToMainButton";
 
@@ -16,21 +14,31 @@ public class SettingPanel : BasePanel
     public event Action<float> OnBGMVolumeChange;
     public event Action<float> OnSFXVolumeChange;
     public event Action BackToMainClicked;
-    public event Action OnAboutUsClick;
+    public event Action<int> LanguageSelected;
     public event Action OnBackClick;
 
     [SerializeField] private Slider _bgmVolumeSlider;
     [SerializeField] private Slider _sfxVolumeSlider;
+    [SerializeField] private Dropdown _languageDropdown;
     public Text _bgmVolumeText;
     public Text _sfxVolumeText;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        if (_languageDropdown == null)
+        {
+            Debug.LogError("SettingPanel requires a configured LanguageDropdown.", this);
+            return;
+        }
+
+        _languageDropdown.onValueChanged.AddListener(HandleLanguageSelected);
+    }
 
     protected override void OnButtonClick(string buttonName)
     {
         switch (buttonName)
         {
-            case AboutUsButtonName:
-                OnAboutUsClick?.Invoke();
-                break;
             case BackButtonName:
                 OnBackClick?.Invoke();
                 break;
@@ -69,5 +77,45 @@ public class SettingPanel : BasePanel
     public void SetBackToMainVisable(bool isVisable)
     {
         FindComponent<Button>(BackToMainButtonName).gameObject.SetActive(isVisable);
+        _languageDropdown.gameObject.SetActive(!isVisable);
+    }
+
+    public void SetLanguageOptions(
+        string chineseLabel,
+        string englishLabel,
+        string languageCode)
+    {
+        if (_languageDropdown == null) return;
+
+        _languageDropdown.ClearOptions();
+        _languageDropdown.AddOptions(new List<string>
+        {
+            chineseLabel,
+            englishLabel
+        });
+        _languageDropdown.SetValueWithoutNotify(
+            languageCode == SettingsManager.EnglishLanguageCode ? 1 : 0);
+        _languageDropdown.RefreshShownValue();
+    }
+
+    public void SetLanguageDropdownInteractable(bool interactable)
+    {
+        if (_languageDropdown != null)
+        {
+            _languageDropdown.interactable = interactable;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (_languageDropdown != null)
+        {
+            _languageDropdown.onValueChanged.RemoveListener(HandleLanguageSelected);
+        }
+    }
+
+    private void HandleLanguageSelected(int index)
+    {
+        LanguageSelected?.Invoke(index);
     }
 }

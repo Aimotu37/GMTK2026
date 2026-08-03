@@ -15,6 +15,15 @@ public sealed class RuntimeServicesStartModule : IGameStartModule
 
         SettingsManager.Instance.Initialize();
 
+        bool localeApplied = false;
+        yield return DataManager.Instance.SetLocaleAsync(
+            SettingsManager.Instance.LanguageCode,
+            success => localeApplied = success);
+        if (!localeApplied)
+        {
+            UnityEngine.Debug.LogWarning("Saved language could not be applied.");
+        }
+
         yield return AudioManager.Instance.InitializeAsync();
         if (!AudioManager.Instance.IsInitialized)
         {

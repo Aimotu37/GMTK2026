@@ -43,13 +43,12 @@ public class CaseBoardPanel : BasePanel
         }
     }
 
-    public void ChangeClueState(int index, string text)
+    public void ChangeClueState(int index, string text, string localizationKey)
     {
         if (index < 0 || index >= clutItems.Count)
             return;
 
-        clutItems[index].lockIcon.gameObject.SetActive(false);
-        clutItems[index].clueText.text = text;
+        clutItems[index].SetUnlockedText(text, localizationKey);
 
         StartCoroutine(RefreshLayoutNextFrame());
     }
@@ -60,8 +59,7 @@ public class CaseBoardPanel : BasePanel
         if (index < 0 || index >= clutItems.Count)
             return;
 
-        clutItems[index].lockIcon.gameObject.SetActive(true);
-        clutItems[index].clueText.text = string.Empty;
+        clutItems[index].SetLocked();
 
         StartCoroutine(RefreshLayoutNextFrame());
     }

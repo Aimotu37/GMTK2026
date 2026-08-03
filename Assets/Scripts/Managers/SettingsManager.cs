@@ -5,6 +5,9 @@ using UnityEngine;
 
 public sealed class SettingsManager : SingletonMono<SettingsManager>
 {
+    public const string ChineseLanguageCode = "zh-Hans";
+    public const string EnglishLanguageCode = "en";
+
     private const int CurrentSettingsVersion = 1;
     private const string SettingsFileName = "settings.json";
     private const string TempSettingsFileName = "settings.tmp";
@@ -14,6 +17,7 @@ public sealed class SettingsManager : SingletonMono<SettingsManager>
     public bool IsInitialized { get; private set; }
     public float BgmVolume => _data.bgmVolume;
     public float SfxVolume => _data.sfxVolume;
+    public string LanguageCode => _data.languageCode;
 
     public void Initialize()
     {
@@ -31,6 +35,7 @@ public sealed class SettingsManager : SingletonMono<SettingsManager>
 
                 loaded.bgmVolume = Mathf.Clamp01(loaded.bgmVolume);
                 loaded.sfxVolume = Mathf.Clamp01(loaded.sfxVolume);
+                loaded.languageCode = NormalizeLanguageCode(loaded.languageCode);
                 _data = loaded;
             }
             catch (Exception exception)
@@ -67,6 +72,15 @@ public sealed class SettingsManager : SingletonMono<SettingsManager>
         SaveSettings();
     }
 
+    public void SetLanguageCode(string languageCode)
+    {
+        string normalized = NormalizeLanguageCode(languageCode);
+        if (string.Equals(_data.languageCode, normalized, StringComparison.Ordinal)) return;
+
+        _data.languageCode = normalized;
+        SaveSettings();
+    }
+
     private void SaveSettings()
     {
         try
@@ -93,8 +107,16 @@ public sealed class SettingsManager : SingletonMono<SettingsManager>
         {
             version = CurrentSettingsVersion,
             bgmVolume = 0.7f,
-            sfxVolume = 0.4f
+            sfxVolume = 0.4f,
+            languageCode = ChineseLanguageCode
         };
+    }
+
+    private static string NormalizeLanguageCode(string languageCode)
+    {
+        return string.Equals(languageCode, EnglishLanguageCode, StringComparison.OrdinalIgnoreCase)
+            ? EnglishLanguageCode
+            : ChineseLanguageCode;
     }
 
     private static string GetSettingsFilePath()

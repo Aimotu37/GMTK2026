@@ -1,0 +1,387 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: GameContent_en
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 9cd26e346f898dc44847ddc8f15f6731, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 65954802835456
+    m_Localized: Discover how Mark escaped the island.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954807029760
+    m_Localized: Workshop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954807029761
+    m_Localized: "This place is an island surrounded by frigid waters year-round.
+      There are no bridges; the only way off is the armed patrol ferry. The Devil\u2019s
+      Prison\u2014all that awaits its inmates is a lifetime behind bars. Yet yesterday,
+      the prison alarms rang all night. My cellmate, Mark, dug through the ventilation
+      shaft and escaped, leaving nothing on his bed but a crude dummy."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954807029762
+    m_Localized: Mark fitted a drill with the motor and broke through the ventilation
+      shaft. He sharpened a spoon to shape an oar, used steam to bond rubber raincoats
+      into a raft and life jacket, converted the accordion into a pump to inflate
+      the raft, and finally sailed away.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224064
+    m_Localized: "Uncover the truth behind the police officer\u2019s death."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224065
+    m_Localized: Inn Bar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224066
+    m_Localized: "After leaving the prison, we stopped at an inn. By \u201Cwe,\u201D
+      I mean myself and the police officer assigned to me\u2014a young man far too
+      straitlaced for his age. By evening, thick fog had swallowed the town, turning
+      the inn into yet another island. I lingered at the bar for ages, but the young
+      officer never offered me a drink. He did not even respond to the barmaid\u2019s
+      repeated attempts to charm him. Just as boredom drove me toward bed, a scream
+      came from outside. The young officer lay on the ground, his heart already still,
+      with no footprints around him but our own."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224067
+    m_Localized: The officer was taking anti-inflammatory medicine for an infected
+      wisdom tooth. The barmaid replaced his drink with alcohol, and the interaction
+      poisoned him. Dizzy, he left the inn, collapsed, and died. The heavy fog and
+      moisture concealed the footprints at the scene.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224068
+    m_Localized: Uncover the truth behind the moving demon.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224069
+    m_Localized: "Chapel at the Count\u2019s Estate"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224070
+    m_Localized: "My success in solving the case caught the attention of a noblewoman
+      who happened to be stranded there. Once the fog lifted, she invited me to stay
+      at her estate. Though, as a prisoner, I should not be wandering around without
+      a police escort, I accepted in hopes of finding Mark\u2014and defeating the
+      demon\u2014sooner. Of course, things were not so simple. On my first night
+      at the estate, a scream rang out in the dead of night. The noblewoman\u2019s
+      daughter claimed she had seen the demon in the painting move. Objective: uncover
+      the truth behind the moving demon."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224071
+    m_Localized: "The count\u2019s family decided to sell the painting. The appraiser,
+      who truly loved it, planned to steal it in secret and replace it with a forgery.
+      When the count\u2019s daughter came downstairs in the middle of the night,
+      the appraiser had to hang the painting in the wrong place to avoid being discovered,
+      making her think the demon inside it had moved."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224072
+    m_Localized: Vacuum Cleaner
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224073
+    m_Localized: A broken vacuum cleaner. Opening it reveals that the motor is missing.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224074
+    m_Localized: Steam Pipe
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224075
+    m_Localized: Is that a rubber raincoat stuck to it? It has melted completely.
+      What a pungent smell.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224076
+    m_Localized: Barred Window
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224077
+    m_Localized: The sea stays frigid all year, and the waves are vicious. Anyone
+      who tries to swim will freeze to death without question, though every year
+      some fool still tries.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224078
+    m_Localized: Accordion
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224079
+    m_Localized: "An accordion that is out of tune. Ha, how nostalgic. Perhaps I\u2019ll
+      give a solo performance at the next gathering."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224080
+    m_Localized: Spoon
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224081
+    m_Localized: A stolen spoon with one edge ground into a blade. Sharp and dangerous.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224082
+    m_Localized: Medical Record in His Pocket
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224083
+    m_Localized: "Infected wisdom tooth. Take as directed by the doctor\u2026 The
+      rest is illegible. Ha, no wonder he talks as little as I do."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224084
+    m_Localized: White Powder
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224085
+    m_Localized: White powder scattered across the bar. I dabbed some on my finger
+      and tasted it. Strange flavor. It seems they were not making a salt-rimmed
+      margarita.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224086
+    m_Localized: Wine Glass
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224087
+    m_Localized: "Pink liquid remains in the glass. Vodka, and\u2026 a very strong
+      fruit aroma."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224088
+    m_Localized: Window
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224089
+    m_Localized: The thick fog hides everything, and the air is damp and clammy.
+      We are trapped here. No one will come until the fog lifts. Is that a good thing
+      or a bad thing?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224090
+    m_Localized: Pistol
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224091
+    m_Localized: A symbol of police authority. I checked the rifling and magazine;
+      there is no sign it has been fired. Even so, under the circumstances, it is
+      best to leave it where everyone can see it.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224092
+    m_Localized: Appraisal Certificate
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224093
+    m_Localized: "The appraisal concludes that this piece is an original. It was
+      issued by the appraiser recently staying at the count\u2019s estate, who knows
+      a great deal about the artist."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224094
+    m_Localized: The Temptation of Saint Anthony
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224095
+    m_Localized: "A famous sixteenth-century painting by Bosch. It is a hinged triptych
+      altarpiece divided into a central panel, left wing, and right wing, each enormous
+      in size\u2026 Shh, I\u2019m only reading what the appraisal says."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224096
+    m_Localized: "Portrait of the Duke\u2019s Family"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224097
+    m_Localized: "Compared with the count\u2019s estate as it is now, quite a few
+      things are missing. Perhaps the family is not as wealthy as I imagined."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224098
+    m_Localized: Fishing-Tackle Bucket
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224099
+    m_Localized: "A bucket of fishing gear by the door, oddly out of place among
+      the estate\u2019s other furnishings. Perhaps someone in the count\u2019s family
+      is an avid angler."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224100
+    m_Localized: Trolley
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224101
+    m_Localized: "A multi-section flashlight, a handheld magnifying glass, a small
+      polarizing lens\u2014and several other things I do not recognize. Such an impressive
+      collection of appraisal tools that their owner needed a trolley to carry them."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224102
+    m_Localized: Brute Force
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224103
+    m_Localized: Swim for It
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224104
+    m_Localized: Ride the Wind and Waves
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224105
+    m_Localized: Drink Poison to Quench Thirst
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224106
+    m_Localized: Drink to Excess
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224107
+    m_Localized: Bitter Medicine
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224108
+    m_Localized: Jump at Shadows
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224109
+    m_Localized: Sell the Family Fortune
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224110
+    m_Localized: Swap the Real for the Fake
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224111
+    m_Localized: "I can\u2019t wait to see what kind of farce you\u2019ll stage this
+      time."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224112
+    m_Localized: "You\u2019re playing with fire, darling. How long do you think your
+      luck will last?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224113
+    m_Localized: "Ha, the way you struggle is truly touching\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224114
+    m_Localized: "You\u2019ll regret this. You\u2019ll regret it very, very much.
+      I promise."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224115
+    m_Localized: "You\u2019re right. It\u2019s time we had some fun."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224116
+    m_Localized: "Very well. There\u2019s no harm in giving you a tiny reward now
+      and then."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224117
+    m_Localized: "There\u2019s still time to surrender. Don\u2019t worry\u2014I like
+      people who know when they\u2019re beaten."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224118
+    m_Localized: "You think it\u2019s over? No, baby. Those nightmares will never
+      leave you. They\u2019ll be like restless bones, creaking without end\u2014haunting
+      you, tormenting you, forever and ever\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224119
+    m_Localized: "Shabby scenery, hopeless supporting players\u2014how is our hero
+      supposed to shine on a stage like this?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224120
+    m_Localized: "Don\u2019t celebrate too soon. We have a long road ahead of us."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224121
+    m_Localized: "Don\u2019t blame me, darling. You brought this suffering on yourself."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224122
+    m_Localized: "Heh. You can\u2019t escape. Fate\u2019s rope is already tightening
+      around your throat. All your efforts are in vain. In the end, we\u2019ll meet
+      again in hell\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224123
+    m_Localized: "Oh, darling, you don\u2019t like dreaming. I know. Shh, shh, shh.
+      Don\u2019t worry, there\u2019s nothing here\u2014no wrongfully condemned prisoners,
+      no endless lights of the tribunal\u2026 only darkness. Dark\u2014ness\u2014warm
+      and damp. Do you remember now? The smell of thawing earth, the prick of straw
+      against your face. That\u2019s right: the old barn in Kuwait County!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224124
+    m_Localized: "You\u2019ve come too far, baby. This journey has worn you out.
+      Now it\u2019s time to go home."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224125
+    m_Localized: "No, no, we can\u2019t wait any longer. We must leave now, before
+      the apple trees bloom this year\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224126
+    m_Localized: "Then tell me: what exactly are you waiting for? Justice that doesn\u2019t
+      exist? Forgiveness that will never come? Or are you waiting for\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224127
+    m_Localized: Aha, what a daring idea. In that respect, you and I are rather alike.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224128
+    m_Localized: "But you know every bargain has its price. Five statements\u2014each
+      time, you may speak only four. If your sweet truth has not surrendered within
+      those four statements, you die, baby."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224129
+    m_Localized: "Let me give you a word of advice. This is a perilous road with
+      no return, and you, darling, are an empty-handed gambler who must stake everything.
+      Soul, flesh\u2014hehehehe\u2026 I\u2019ll do everything in my power to make
+      you lose. Oh, what am I saying? Of course you have those things."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224130
+    m_Localized: Made up your mind? Heh, how decisive. Sign your name here.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224131
+    m_Localized: 'Time Curse: Fewer Statements'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224132
+    m_Localized: "I can see the countdown on your life ticking down. Let me speed
+      it up\u2026"
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

@@ -165,8 +165,8 @@ public class FlowController : SingletonMono<FlowController>
     private IEnumerator HandleStoryPlay(float duration)
     {
         //播放剧情动画：读取当前案件的剧情文本，通过恶魔面板打字机播放
-        List<StoryDialogueLineData> storyLines = GameManager.Instance.CurrentCaseData != null
-            ? GameManager.Instance.CurrentCaseData.storyLines
+        IReadOnlyList<DialogueConfig> storyLines = GameManager.Instance.CurrentCaseConfig != null
+            ? GameManager.Instance.CurrentCaseConfig.StoryLines
             : null;
 
         if (storyLines == null || storyLines.Count == 0)
@@ -192,10 +192,9 @@ public class FlowController : SingletonMono<FlowController>
             else
             {
                 bool playedAnyLine = false;
-                foreach (StoryDialogueLineData line in storyLines)
+                foreach (DialogueConfig line in storyLines)
                 {
-                    if (line == null || string.IsNullOrEmpty(line.text)) continue;
-                    yield return GameManager.Instance.PlayLineAndWaitForContinue(
+                    yield return GameManager.Instance.PlayDialogueAndWaitForContinue(
                         panel,
                         line,
                         revealScreen: !playedAnyLine);
@@ -220,9 +219,13 @@ public class FlowController : SingletonMono<FlowController>
     {
         GameManager.Instance.DemonSpeak();
         demonSpeak = StartCoroutine(DemonSpeakPeriodically());
-        string caseName = GameManager.Instance.CurrentCaseData.caseName;
+
+        CaseConfig caseConfig = GameManager.Instance.CurrentCaseConfig;
+        string caseName = caseConfig.NameKey;
+        yield return DataManager.Instance.GetLocalizedTextAsync(
+            caseConfig.NameKey,
+            value => caseName = value);
         UIManager.Instance.GetPanel<CaseBoardPanel>("case_board_panel").SetCaseName(caseName);
-        yield break;
     }
 
     private IEnumerator HandleCluePopup()
@@ -257,7 +260,7 @@ public class FlowController : SingletonMono<FlowController>
                 (tempPanel as CluePanel).SetCanvasGroupAlpha(t);
                 yield return null;
             }
-            ItemData item = GameManager.Instance.Items[GameManager.Instance.LatestItemId];
+            ItemsConfig item = GameManager.Instance.Items[GameManager.Instance.LatestItemId];
             EventManager.Instance.EventTrigger(GameEvents.DropItemOnZone, item);
             EventManager.Instance.EventTrigger(GameEvents.CheckCaseClues, GameManager.Instance.GotCaseItemIds.Count > 0);
             UIManager.Instance.HidePanel("clue_panel");
@@ -292,8 +295,8 @@ public class FlowController : SingletonMono<FlowController>
         // 展示案件真相文本（复用通用剧情对话框），读完点击继续后自动进入下一案件/真结局
         UIManager.Instance.HidePanel("success_panel");
 
-        List<StoryDialogueLineData> truthLines = GameManager.Instance.CurrentCaseData != null
-            ? GameManager.Instance.CurrentCaseData.truthLines
+        IReadOnlyList<DialogueConfig> truthLines = GameManager.Instance.CurrentCaseConfig != null
+            ? GameManager.Instance.CurrentCaseConfig.TruthLines
             : null;
 
         if (truthLines != null && truthLines.Count > 0)
@@ -307,10 +310,9 @@ public class FlowController : SingletonMono<FlowController>
             }
             else
             {
-                foreach (StoryDialogueLineData line in truthLines)
+                foreach (DialogueConfig line in truthLines)
                 {
-                    if (line == null || string.IsNullOrEmpty(line.text)) continue;
-                    yield return GameManager.Instance.PlayLineAndWaitForContinue(panel, line);
+                    yield return GameManager.Instance.PlayDialogueAndWaitForContinue(panel, line);
                 }
             }
         }

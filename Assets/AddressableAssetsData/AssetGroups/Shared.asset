@@ -22,11 +22,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2efdb743ebd726a40b6fb9f009b61e3d
-    m_Address: config/demon_speaks
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3271c4ddb927d9e4a8ea1fb1d3c950d2
     m_Address: ui/case_board_panel
     m_ReadOnly: 0
@@ -102,8 +97,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: fcd475959e638d347a66b3345bbb60cd
-    m_Address: config/debuffs
+  - m_GUID: 7e5377bbd06e79b4680ad4e0190f2e9c
+    m_Address: portrait/demon_opening
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0710168d6f6c28242893565aa03e77e4
+    m_Address: portrait/demon_hurt
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6afa7ba0465216c4d9ae8423d4a31716
+    m_Address: portrait/demon_defeat
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

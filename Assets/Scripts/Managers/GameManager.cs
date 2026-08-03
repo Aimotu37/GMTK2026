@@ -2,7 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.Events;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;  // 明确指定 Random 为 UnityEngine.Random
 
@@ -41,22 +43,22 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
 
     public GameState CurrentState => _currentState;
     public List<int> GotCaseItemIds => _gotCaseItemIds;
-    public CaseDataSO CurrentCaseData => _currentCaseData;
+    public CaseConfig CurrentCaseConfig => _currentCaseConfig;
     public int LatestItemId => latestItemId;
     public int CurrentCaseIndex => _currentCaseIndex;
 
     //单局游戏变量
-    private CaseDataSO _currentCaseData;
-    private ItemDataSO _currentCaseItems;
-    private OptionDataSO _currentCaseOtions;
-    private DemonSpeakDataSO _demonSpeak;
-    private DebuffDataSO _debuff;
+    private CaseConfig _currentCaseConfig;
+    private IReadOnlyList<DemonLinesConfig> _demonLines = new List<DemonLinesConfig>();
+    private IReadOnlyList<DebuffConfig> _debuffs = new List<DebuffConfig>();
 
-    private Dictionary<int, ItemData> _items = new Dictionary<int, ItemData>();
-    private Dictionary<int, OptionData> _options = new Dictionary<int, OptionData>();
+    private Dictionary<int, ItemsConfig> _items = new Dictionary<int, ItemsConfig>();
+    private Dictionary<int, OptionsConfig> _options = new Dictionary<int, OptionsConfig>();
+    private readonly Dictionary<string, AsyncOperationHandle<Sprite>> _portraitHandles =
+        new Dictionary<string, AsyncOperationHandle<Sprite>>();
 
-    public Dictionary<int, ItemData> Items => _items;
-    public Dictionary<int, OptionData> Options => _options;
+    public Dictionary<int, ItemsConfig> Items => _items;
+    public Dictionary<int, OptionsConfig> Options => _options;
 
 
     private bool _isCorrect;
@@ -85,6 +87,20 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
 
         _initFailed = false;
 
+        var cases = new List<CaseConfig>(DataManager.Instance.ConfigSnapshot.Cases.Values);
+        cases.Sort((left, right) => left.SortOrder.CompareTo(right.SortOrder));
+        allCaseIds.Clear();
+        foreach (CaseConfig config in cases)
+        {
+            allCaseIds.Add(config.CaseId);
+        }
+
+        if (allCaseIds.Count == 0)
+        {
+            _initFailed = true;
+            Debug.LogError("Game config does not contain any cases.");
+        }
+
         if (_initFailed)
         {
             _isInitialized = false;
@@ -98,6 +114,19 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
             (this as ISaveable).RegisterSaveable();
             Debug.Log(this.name + " Initialization Successful.");
         }
+    }
+
+    private void OnDestroy()
+    {
+        foreach (AsyncOperationHandle<Sprite> handle in _portraitHandles.Values)
+        {
+            if (handle.IsValid())
+            {
+                Addressables.Release(handle);
+            }
+        }
+
+        _portraitHandles.Clear();
     }
 
     public void SwitchGameState(GameState targetState)
@@ -128,7 +157,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
     {
         ResetAllGameRuntimeData();
         PrepareCaseData(_currentCaseId);
-        string sceneName = Scenes.CaseScenePrefix + _currentCaseId;
+        string sceneName = _currentCaseConfig.SceneName;
         ScenesManager.Instance?.SwitchGameScene(sceneName, sceneLoaded =>
         {
             if (!sceneLoaded)
@@ -181,7 +210,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
                 interaction = InteractionController.Instance;
                 interaction?.SetSpeakerZone(speakerZone);
                 flow = FlowController.Instance;
-                _currentWords = DEFAULT_WORDS;
+                _currentWords = GetCurrentCaseInitialWords();
             });
             return false;
         }
@@ -230,7 +259,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         }
 
         // 恢复单局变量并启用输入
-        _currentWords = DEFAULT_WORDS;
+        _currentWords = GetCurrentCaseInitialWords();
         EventManager.Instance.EventTrigger(GameEvents.CountChanged, _currentWords);
         EndSceneTransition();
         flow.FlowInit(playIntroStory: false);
@@ -289,7 +318,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
 
         _sceneSnapshots.Clear();
         PrepareCaseData(_currentCaseId);
-        string sceneName = Scenes.CaseScenePrefix + _currentCaseId;
+        string sceneName = _currentCaseConfig.SceneName;
         ScenesManager.Instance?.SwitchGameScene(sceneName, sceneLoaded =>
         {
             if (!sceneLoaded)
@@ -474,21 +503,27 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
     public void PrepareCaseData(int caseId)
     {
         _currentCaseId = caseId;
-        _currentCaseData = DataManager.Instance.GetCase(caseId);
-        _currentCaseItems = DataManager.Instance.GetItems(caseId);
+        _currentCaseConfig = DataManager.Instance.GetCaseConfig(caseId);
         _items.Clear();
-        foreach (var item in _currentCaseItems.itemDatas)
+        foreach (ItemsConfig item in DataManager.Instance.GetItemConfigs(caseId))
         {
-            _items.Add(item.itemID, item);
+            _items.Add(item.ItemId, item);
         }
-        _currentCaseOtions = DataManager.Instance.GetOptions(caseId);
         _options.Clear();
-        foreach (var option in _currentCaseOtions.optionDatas)
+        foreach (OptionsConfig option in DataManager.Instance.GetOptionConfigs(caseId))
         {
-            _options.Add(option.optionID, option);
+            _options.Add(option.OptionId, option);
         }
-        _demonSpeak = DataManager.Instance.GetDemonSpeak();
-        _debuff = DataManager.Instance.GetDebuffData();
+        _currentWords = _currentCaseConfig.InitialWords;
+        _demonLines = DataManager.Instance.GetDemonLinesConfigs();
+        _debuffs = DataManager.Instance.GetDebuffConfigs();
+    }
+
+    private int GetCurrentCaseInitialWords()
+    {
+        return _currentCaseConfig != null
+            ? _currentCaseConfig.InitialWords
+            : DEFAULT_WORDS;
     }
 
     // 在活动场景中捕获需要恢复的对象的克隆快照（禁用），保存到 DontDestroyOnLoad 下
@@ -524,12 +559,30 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         }
         else
         {
-            string clue = $"已提取{_items[itemId].itemName}留声：{_items[itemId].clueText}";
-            GotCaseItemIds.Add(itemId);
-            latestItemId = itemId;
-            flow.ShowCluePopup(clue);
-            //TriggerRandomDebuff();
+            StartCoroutine(ShowLocalizedClue(itemId));
         }
+    }
+
+    private IEnumerator ShowLocalizedClue(int itemId)
+    {
+        if (!_items.TryGetValue(itemId, out ItemsConfig item))
+        {
+            Debug.LogError($"Item config {itemId} does not exist.");
+            yield break;
+        }
+
+        string itemName = item.NameKey;
+        string clueText = item.ClueKey;
+        yield return DataManager.Instance.GetLocalizedTextAsync(
+            item.NameKey,
+            value => itemName = value);
+        yield return DataManager.Instance.GetLocalizedTextAsync(
+            item.ClueKey,
+            value => clueText = value);
+
+        GotCaseItemIds.Add(itemId);
+        latestItemId = itemId;
+        flow.ShowCluePopup($"{itemName}: {clueText}");
     }
 
     /// <summary>按概率决定这次是否触发诅咒；由线索弹窗播完之后调用，避免跟线索信息同时挤在一起</summary>
@@ -547,21 +600,40 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
     /// </summary>
     private IEnumerator TriggerRandomDebuffRoutine()
     {
-        if (_debuff == null || _debuff.debuffDatas == null || _debuff.debuffDatas.Count == 0) yield break;
-        List<DebuffData> candidates = _debuff.debuffDatas.FindAll(d => d.effectType == EffectType.ReduceSpeak);
+        if (_debuffs == null || _debuffs.Count == 0) yield break;
+
+        var candidates = new List<DebuffConfig>();
+        foreach (DebuffConfig config in _debuffs)
+        {
+            if (config.EffectType == DebuffType.ReduceSpeak)
+            {
+                candidates.Add(config);
+            }
+        }
+
         if (candidates.Count == 0) yield break;
 
         int index = Random.Range(0, candidates.Count);
-        DebuffData debuff = candidates[index];
-        _currentDebuffId = debuff.debuffID;
+        DebuffConfig debuff = candidates[index];
+        _currentDebuffId = debuff.DebuffId;
 
-        EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, debuff.debuffDesc);
-        EventManager.Instance.EventTrigger(GameEvents.DebuffEffect, debuff.debuffName);
+        string description = debuff.DescriptionKey;
+        string debuffName = debuff.NameKey;
+        yield return DataManager.Instance.GetLocalizedTextAsync(
+            debuff.DescriptionKey,
+            value => description = value);
+        yield return DataManager.Instance.GetLocalizedTextAsync(
+            debuff.NameKey,
+            value => debuffName = value);
+
+        EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, description);
+        EventManager.Instance.EventTrigger(GameEvents.DebuffEffect, debuffName);
 
         // 给玩家留时间读完诅咒描述，再让效果真正生效
         yield return new WaitForSeconds(2.0f);
 
-        if (int.TryParse(debuff.effectParam, out int reduceAmount) && reduceAmount > 0)
+        int reduceAmount = Mathf.RoundToInt(debuff.EffectParam);
+        if (reduceAmount > 0)
         {
             _currentWords = Mathf.Max(0, _currentWords - reduceAmount);
             EventManager.Instance.EventTrigger(GameEvents.CountChanged, _currentWords);
@@ -588,7 +660,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
 
     public void CheckCaseWin(int optionId)
     {
-        if (_options[optionId].isCorrect)
+        if (_options[optionId].IsCorrect)
         {
             flow.ShowSuccess(_currentCaseId);
         }
@@ -600,47 +672,35 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
 
     public void DemonSpeak()
     {
-        int index = Random.Range(0, 3);
-        EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, _demonSpeak.demonSpeakDatas[index].defaultSpeak);
+        StartCoroutine(PlayRandomDemonLine(config => config.DefaultKey));
     }
-    /// <summary>随机取一条恶魔被击败发言（真结局用），不触发事件，交给调用方自行展示</summary>
-    public StoryDialogueLineData GetRandomDefeatDialogue()
-    {
-        DemonSpeakDataSO demonSpeak = _demonSpeak;
-        if (demonSpeak == null && DataManager.Instance != null)
-        {
-            demonSpeak = DataManager.Instance.GetDemonSpeak();
-        }
 
-        if (demonSpeak == null || demonSpeak.demonSpeakDatas == null || demonSpeak.demonSpeakDatas.Count == 0)
+    private IEnumerator PlayRandomDemonLine(Func<DemonLinesConfig, string> selectKey)
+    {
+        if (_demonLines == null || _demonLines.Count == 0) yield break;
+
+        DemonLinesConfig config = _demonLines[Random.Range(0, _demonLines.Count)];
+        string localizationKey = selectKey(config);
+        string text = localizationKey;
+        yield return DataManager.Instance.GetLocalizedTextAsync(
+            localizationKey,
+            value => text = value);
+        if (!string.IsNullOrEmpty(text))
         {
-            return null;
+            EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, text);
         }
-        int index = Random.Range(0, demonSpeak.demonSpeakDatas.Count);
-        return demonSpeak.demonSpeakDatas[index].defeatDialogue;
     }
+
     /// <summary>成功还原案件时，让恶魔说一句受伤发言（复用 demon_panel 常驻发言区）</summary>
     public void DemonHurtSpeak()
     {
-        if (_demonSpeak == null || _demonSpeak.demonSpeakDatas == null || _demonSpeak.demonSpeakDatas.Count == 0) return;
-        int index = Random.Range(0, _demonSpeak.demonSpeakDatas.Count);
-        string speak = _demonSpeak.demonSpeakDatas[index].hurtSpeak;
-        if (!string.IsNullOrEmpty(speak))
-        {
-            EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, speak);
-        }
+        StartCoroutine(PlayRandomDemonLine(config => config.HurtKey));
     }
 
     /// <summary>玩家死亡时，让恶魔说一句嘲讽发言（复用 demon_panel 常驻发言区）</summary>
     public void DemonMockSpeak()
     {
-        if (_demonSpeak == null || _demonSpeak.demonSpeakDatas == null || _demonSpeak.demonSpeakDatas.Count == 0) return;
-        int index = Random.Range(0, _demonSpeak.demonSpeakDatas.Count);
-        string speak = _demonSpeak.demonSpeakDatas[index].mockSpeak;
-        if (!string.IsNullOrEmpty(speak))
-        {
-            EventManager.Instance.EventTrigger(GameEvents.DemonSpeak, speak);
-        }
+        StartCoroutine(PlayRandomDemonLine(config => config.MockKey));
     }
 
     /// <summary>
@@ -648,8 +708,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
     /// </summary>
     public void PlayOpeningStory(Action onComplete)
     {
-        DemonSpeakDataSO demonSpeak = DataManager.Instance.GetDemonSpeak();
-        List<StoryDialogueLineData> lines = demonSpeak != null ? demonSpeak.openingLines : null;
+        IReadOnlyList<DialogueConfig> lines = DataManager.Instance.GetOpeningDialogues();
         if (lines == null || lines.Count == 0)
         {
             onComplete?.Invoke();
@@ -658,7 +717,9 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         StartCoroutine(PlayOpeningLines(lines, onComplete));
     }
 
-    private IEnumerator PlayOpeningLines(List<StoryDialogueLineData> lines, Action onComplete)
+    private IEnumerator PlayOpeningLines(
+        IReadOnlyList<DialogueConfig> lines,
+        Action onComplete)
     {
         StoryDialoguePanel panel = null;
         yield return GetOrLoadStoryDialoguePanel(p => panel = p);
@@ -671,10 +732,9 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         }
 
         bool revealOnNextLine = true;
-        foreach (StoryDialogueLineData line in lines)
+        foreach (DialogueConfig line in lines)
         {
-            if (line == null || string.IsNullOrEmpty(line.text)) continue;
-            yield return PlayLineAndWaitForContinue(panel, line, revealOnNextLine);
+            yield return PlayDialogueAndWaitForContinue(panel, line, revealOnNextLine);
             revealOnNextLine = false;
         }
 
@@ -688,8 +748,8 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
 
     private IEnumerator PlayEndingStoryRoutine(Action onComplete)
     {
-        StoryDialogueLineData endingLine = GetRandomDefeatDialogue();
-        if (endingLine == null || string.IsNullOrEmpty(endingLine.text))
+        DialogueConfig endingLine = GetRandomDefeatDialogueConfig();
+        if (endingLine == null)
         {
             Debug.LogWarning("PlayEndingStory: 未找到有效的结局台词，返回主菜单。");
             onComplete?.Invoke();
@@ -705,8 +765,82 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
             yield break;
         }
 
-        yield return PlayLineAndWaitForContinue(panel, endingLine, revealScreen: true);
+        yield return PlayDialogueAndWaitForContinue(panel, endingLine, revealScreen: true);
         onComplete?.Invoke();
+    }
+
+    private DialogueConfig GetRandomDefeatDialogueConfig()
+    {
+        if (_demonLines == null || _demonLines.Count == 0)
+        {
+            return null;
+        }
+
+        DemonLinesConfig demon = _demonLines[Random.Range(0, _demonLines.Count)];
+        return DataManager.Instance.GetDialogueConfig(demon.DefeatDialogueId);
+    }
+
+    public IEnumerator PlayDialogueAndWaitForContinue(
+        StoryDialoguePanel panel,
+        DialogueConfig config,
+        bool revealScreen = false)
+    {
+        StoryDialogueLineData line = null;
+        yield return CreateDialogueLine(config, value => line = value);
+        if (line == null) yield break;
+
+        yield return PlayLineAndWaitForContinue(panel, line, revealScreen);
+    }
+
+    private IEnumerator CreateDialogueLine(
+        DialogueConfig config,
+        Action<StoryDialogueLineData> onReady)
+    {
+        string localizedText = config.TextKey;
+        yield return DataManager.Instance.GetLocalizedTextAsync(
+            config.TextKey,
+            value => localizedText = value);
+
+        var line = new StoryDialogueLineData
+        {
+            text = localizedText,
+            showPortrait = config.ShowPortrait
+        };
+
+        if (config.ShowPortrait)
+        {
+            yield return GetPortrait(config.PortraitAddress, sprite => line.portrait = sprite);
+        }
+
+        onReady?.Invoke(line);
+    }
+
+    private IEnumerator GetPortrait(string address, Action<Sprite> onReady)
+    {
+        if (!_portraitHandles.TryGetValue(address, out AsyncOperationHandle<Sprite> handle))
+        {
+            handle = Addressables.LoadAssetAsync<Sprite>(address);
+            _portraitHandles.Add(address, handle);
+        }
+
+        if (!handle.IsDone)
+        {
+            yield return handle;
+        }
+
+        if (handle.Status == AsyncOperationStatus.Succeeded)
+        {
+            onReady?.Invoke(handle.Result);
+            yield break;
+        }
+
+        Debug.LogWarning($"Failed to load dialogue portrait '{address}'.");
+        if (handle.IsValid())
+        {
+            Addressables.Release(handle);
+        }
+        _portraitHandles.Remove(address);
+        onReady?.Invoke(null);
     }
 
     /// <summary>
@@ -945,7 +1079,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         _sceneSnapshots.Clear();
 
         PrepareCaseData(_currentCaseId);
-        ScenesManager.Instance?.LoadSceneAsync(Scenes.CaseScenePrefix + _currentCaseId, () =>
+        ScenesManager.Instance?.LoadSceneAsync(_currentCaseConfig.SceneName, () =>
         {
             speakerZone = FindAnyObjectByType<SpeakerZone>();
             interaction = InteractionController.Instance;
@@ -957,13 +1091,13 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         SwitchGameState(GameState.Playing);
     }
 
-    /// <summary>【测试专用】跳过前面所有案件，直接触发真结局（需要已经进过至少一个案件场景，_demonSpeak 才有数据）</summary>
+    /// <summary>【测试专用】跳过前面所有案件，直接触发真结局</summary>
     public void DebugForceTrueEnd()
     {
         if (flow == null) flow = FlowController.Instance;
-        if (_demonSpeak == null)
+        if (_demonLines == null || _demonLines.Count == 0)
         {
-            Debug.LogWarning("DebugForceTrueEnd: 还没进过任何案件场景，_demonSpeak 数据为空，先按 F1/F2/F3 进一个案件再测。");
+            Debug.LogWarning("DebugForceTrueEnd: 恶魔配置数据为空。");
             return;
         }
         flow.FlowStateChange(GameFlowState.TrueEnd);
@@ -1039,7 +1173,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         if (InputManager.Instance != null)
             InputManager.Instance.SetInputEnabled(false);
 
-        string sceneName = Scenes.CaseScenePrefix + _currentCaseId;
+        string sceneName = _currentCaseConfig.SceneName;
         ScenesManager.Instance.SwitchGameScene(sceneName, sceneLoaded =>
         {
             if (!sceneLoaded)

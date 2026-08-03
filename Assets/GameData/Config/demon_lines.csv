@@ -1,0 +1,4 @@
+demon_id,default_key,hurt_key,mock_key,defeat_dialogue_id,duration_seconds
+2001,demon.2001.default,demon.2001.hurt,demon.2001.mock,22001,10
+2002,demon.2002.default,demon.2002.hurt,demon.2002.mock,22002,10
+2003,demon.2003.default,demon.2003.hurt,demon.2003.mock,22003,10

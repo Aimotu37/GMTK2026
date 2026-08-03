@@ -1,0 +1,2 @@
+debuff_id,name_key,description_key,effect_type,effect_param
+0,debuff.0.name,debuff.0.description,ReduceSpeak,1

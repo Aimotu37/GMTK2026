@@ -1,0 +1,103 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: UI_en
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: f3d58eb344f0ac54d8ec4840ff2b7452, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 66000000000001
+    m_Localized: Settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000002
+    m_Localized: Back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000003
+    m_Localized: Main Menu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000004
+    m_Localized: New Game
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000005
+    m_Localized: Continue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000006
+    m_Localized: Quit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000007
+    m_Localized: Reconstruct Truth
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000008
+    m_Localized: Demon's Curse
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000009
+    m_Localized: Case Reconstruction Failed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000010
+    m_Localized: Retry Case
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000011
+    m_Localized: Click outside to return to the case
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000012
+    m_Localized: You Died
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000013
+    m_Localized: Case Reconstructed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000014
+    m_Localized: Click outside to reveal the case truth
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000015
+    m_Localized: Next Case
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000016
+    m_Localized: Music Volume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000017
+    m_Localized: Sound Volume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000018
+    m_Localized: Chinese
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000019
+    m_Localized: English
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000020
+    m_Localized: Clue not found
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

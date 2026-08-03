@@ -1,0 +1,108 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: UI Shared Data
+  m_EditorClassIdentifier: 
+  m_TableCollectionName: UI
+  m_TableCollectionNameGuidString: f3d58eb344f0ac54d8ec4840ff2b7452
+  m_Entries:
+  - m_Id: 66000000000001
+    m_Key: common.settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000002
+    m_Key: common.back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000003
+    m_Key: common.back_to_main
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000004
+    m_Key: main_menu.new_game
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000005
+    m_Key: main_menu.continue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000006
+    m_Key: main_menu.quit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000007
+    m_Key: case_board.restore_truth
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000008
+    m_Key: demon.curse_title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000009
+    m_Key: death.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000010
+    m_Key: death.retry
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000011
+    m_Key: death.return_hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000012
+    m_Key: death.you_died
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000013
+    m_Key: success.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000014
+    m_Key: success.truth_hint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000015
+    m_Key: success.next_case
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000016
+    m_Key: settings.bgm_volume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000017
+    m_Key: settings.sfx_volume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000018
+    m_Key: settings.language.chinese
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000019
+    m_Key: settings.language.english
+    m_Metadata:
+      m_Items: []
+  - m_Id: 66000000000020
+    m_Key: clue.locked
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 6406469503035637785
+  references:
+    version: 2
+    RefIds:
+    - rid: 6406469503035637785
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1785750905480

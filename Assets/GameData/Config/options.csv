@@ -1,0 +1,10 @@
+option_id,case_id,display_order,text_key,is_correct
+401,1001,1,case.1001.option.401,false
+402,1001,2,case.1001.option.402,false
+403,1001,3,case.1001.option.403,true
+501,1002,1,case.1002.option.501,false
+502,1002,2,case.1002.option.502,false
+503,1002,3,case.1002.option.503,true
+601,1003,1,case.1003.option.601,false
+602,1003,2,case.1003.option.602,false
+603,1003,3,case.1003.option.603,true

@@ -12,7 +12,7 @@ public class CaseBoradPresenter : MonoBehaviour
 
     void OnEnable()
     {
-        EventManager.Instance.EventRegister<ItemData>(GameEvents.DropItemOnZone, SetClue);
+        EventManager.Instance.EventRegister<ItemsConfig>(GameEvents.DropItemOnZone, SetClue);
         EventManager.Instance.EventRegister<bool>(GameEvents.CheckCaseClues, CheckTruthInteractable);
         EventManager.Instance.EventRegister<int>(GameEvents.CoverClue, CoverClue);
     }
@@ -26,7 +26,7 @@ public class CaseBoradPresenter : MonoBehaviour
 
     void OnDestroy()
     {
-        EventManager.Instance.EventUnregister<ItemData>(GameEvents.DropItemOnZone, SetClue);
+        EventManager.Instance.EventUnregister<ItemsConfig>(GameEvents.DropItemOnZone, SetClue);
         EventManager.Instance.EventUnregister<bool>(GameEvents.CheckCaseClues, CheckTruthInteractable);
         EventManager.Instance.EventUnregister<int>(GameEvents.CoverClue, CoverClue);
         if (_panel != null)
@@ -48,11 +48,19 @@ public class CaseBoradPresenter : MonoBehaviour
         _panel.OnSettingClicked += HandleSettingClicked;
     }
 
-    private void SetClue(ItemData item)
+    private void SetClue(ItemsConfig item)
     {
-        int index = item.itemID % 100;
-        string text = item.clueText;
-        _panel.ChangeClueState(index - 1, text);
+        StartCoroutine(SetLocalizedClue(item));
+    }
+
+    private IEnumerator SetLocalizedClue(ItemsConfig item)
+    {
+        string clueText = item.ClueKey;
+        yield return DataManager.Instance.GetLocalizedTextAsync(
+            item.ClueKey,
+            value => clueText = value);
+        int index = item.ItemId % 100;
+        _panel.ChangeClueState(index - 1, clueText, item.ClueKey);
     }
 
     private void CoverClue(int itemId)

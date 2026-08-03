@@ -1,0 +1,16 @@
+item_id,case_id,display_order,name_key,clue_key
+101,1001,1,case.1001.item.101.name,case.1001.item.101.clue
+102,1001,2,case.1001.item.102.name,case.1001.item.102.clue
+103,1001,3,case.1001.item.103.name,case.1001.item.103.clue
+104,1001,4,case.1001.item.104.name,case.1001.item.104.clue
+105,1001,5,case.1001.item.105.name,case.1001.item.105.clue
+201,1002,1,case.1002.item.201.name,case.1002.item.201.clue
+202,1002,2,case.1002.item.202.name,case.1002.item.202.clue
+203,1002,3,case.1002.item.203.name,case.1002.item.203.clue
+204,1002,4,case.1002.item.204.name,case.1002.item.204.clue
+205,1002,5,case.1002.item.205.name,case.1002.item.205.clue
+301,1003,1,case.1003.item.301.name,case.1003.item.301.clue
+302,1003,2,case.1003.item.302.name,case.1003.item.302.clue
+303,1003,3,case.1003.item.303.name,case.1003.item.303.clue
+304,1003,4,case.1003.item.304.name,case.1003.item.304.clue
+305,1003,5,case.1003.item.305.name,case.1003.item.305.clue

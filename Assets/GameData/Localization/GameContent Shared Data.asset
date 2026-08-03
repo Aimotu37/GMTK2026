@@ -1,0 +1,320 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: GameContent Shared Data
+  m_EditorClassIdentifier: 
+  m_TableCollectionName: GameContent
+  m_TableCollectionNameGuidString: 9cd26e346f898dc44847ddc8f15f6731
+  m_Entries:
+  - m_Id: 65954802835456
+    m_Key: case.1001.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954807029760
+    m_Key: case.1001.scene
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954807029761
+    m_Key: case.1001.story.01
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954807029762
+    m_Key: case.1001.truth.01
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224064
+    m_Key: case.1002.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224065
+    m_Key: case.1002.scene
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224066
+    m_Key: case.1002.story.01
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224067
+    m_Key: case.1002.truth.01
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224068
+    m_Key: case.1003.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224069
+    m_Key: case.1003.scene
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224070
+    m_Key: case.1003.story.01
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224071
+    m_Key: case.1003.truth.01
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224072
+    m_Key: case.1001.item.101.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224073
+    m_Key: case.1001.item.101.clue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224074
+    m_Key: case.1001.item.102.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224075
+    m_Key: case.1001.item.102.clue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224076
+    m_Key: case.1001.item.103.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224077
+    m_Key: case.1001.item.103.clue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224078
+    m_Key: case.1001.item.104.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224079
+    m_Key: case.1001.item.104.clue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224080
+    m_Key: case.1001.item.105.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224081
+    m_Key: case.1001.item.105.clue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224082
+    m_Key: case.1002.item.201.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224083
+    m_Key: case.1002.item.201.clue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224084
+    m_Key: case.1002.item.202.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224085
+    m_Key: case.1002.item.202.clue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224086
+    m_Key: case.1002.item.203.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224087
+    m_Key: case.1002.item.203.clue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224088
+    m_Key: case.1002.item.204.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224089
+    m_Key: case.1002.item.204.clue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224090
+    m_Key: case.1002.item.205.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224091
+    m_Key: case.1002.item.205.clue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224092
+    m_Key: case.1003.item.301.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224093
+    m_Key: case.1003.item.301.clue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224094
+    m_Key: case.1003.item.302.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224095
+    m_Key: case.1003.item.302.clue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224096
+    m_Key: case.1003.item.303.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224097
+    m_Key: case.1003.item.303.clue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224098
+    m_Key: case.1003.item.304.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224099
+    m_Key: case.1003.item.304.clue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224100
+    m_Key: case.1003.item.305.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224101
+    m_Key: case.1003.item.305.clue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224102
+    m_Key: case.1001.option.401
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224103
+    m_Key: case.1001.option.402
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224104
+    m_Key: case.1001.option.403
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224105
+    m_Key: case.1002.option.501
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224106
+    m_Key: case.1002.option.502
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224107
+    m_Key: case.1002.option.503
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224108
+    m_Key: case.1003.option.601
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224109
+    m_Key: case.1003.option.602
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224110
+    m_Key: case.1003.option.603
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224111
+    m_Key: demon.2001.default
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224112
+    m_Key: demon.2001.hurt
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224113
+    m_Key: demon.2001.mock
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224114
+    m_Key: demon.2001.defeat
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224115
+    m_Key: demon.2002.default
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224116
+    m_Key: demon.2002.hurt
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224117
+    m_Key: demon.2002.mock
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224118
+    m_Key: demon.2002.defeat
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224119
+    m_Key: demon.2003.default
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224120
+    m_Key: demon.2003.hurt
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224121
+    m_Key: demon.2003.mock
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224122
+    m_Key: demon.2003.defeat
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224123
+    m_Key: demon.opening.01
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224124
+    m_Key: demon.opening.02
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224125
+    m_Key: demon.opening.03
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224126
+    m_Key: demon.opening.04
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224127
+    m_Key: demon.opening.05
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224128
+    m_Key: demon.opening.06
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224129
+    m_Key: demon.opening.07
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224130
+    m_Key: demon.opening.08
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224131
+    m_Key: debuff.0.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 65954811224132
+    m_Key: debuff.0.description
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 6406469503035637784
+  references:
+    version: 2
+    RefIds:
+    - rid: 6406469503035637784
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1785750842539

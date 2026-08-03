@@ -1,10 +1,14 @@
+using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class SettingPresenter : MonoBehaviour
 {
+    private const string ChineseLanguageLabelKey = "settings.language.chinese";
+    private const string EnglishLanguageLabelKey = "settings.language.english";
+
     private SettingPanel _panel;
+    private bool _isChangingLanguage;
 
     [SerializeField]
     private string _panelName = "main_setting_panel";
@@ -31,11 +35,13 @@ public class SettingPresenter : MonoBehaviour
             SettingsManager.Instance.BgmVolume,
             SettingsManager.Instance.SfxVolume
         });
+        _panel.SetLanguageDropdownInteractable(false);
         _panel.OnBGMVolumeChange += SetBgmVolume;
         _panel.OnSFXVolumeChange += SetSFxVolume;
-        _panel.OnAboutUsClick += HandleAboutUs;
+        _panel.LanguageSelected += HandleLanguageSelected;
         _panel.OnBackClick += HandleBackClick;
         _panel.BackToMainClicked += HandleBackToMain;
+        StartCoroutine(InitializeLanguageDropdown());
     }
 
     private void OnPanelShown()
@@ -49,8 +55,9 @@ public class SettingPresenter : MonoBehaviour
         {
             _panel.OnBGMVolumeChange -= SetBgmVolume;
             _panel.OnSFXVolumeChange -= SetSFxVolume;
-            _panel.OnAboutUsClick -= HandleAboutUs;
+            _panel.LanguageSelected -= HandleLanguageSelected;
             _panel.OnBackClick -= HandleBackClick;
+            _panel.BackToMainClicked -= HandleBackToMain;
         }
     }
 
@@ -68,10 +75,66 @@ public class SettingPresenter : MonoBehaviour
         _panel._sfxVolumeText.text = 100 * volume + "/100";
     }
 
-    //TODO:待处理关于我们
-    private void HandleAboutUs()
+    private IEnumerator InitializeLanguageDropdown()
     {
+        yield return RefreshLanguageOptions();
+        if (_panel != null)
+        {
+            _panel.SetLanguageDropdownInteractable(true);
+        }
+    }
 
+    private void HandleLanguageSelected(int index)
+    {
+        string languageCode = index == 1
+            ? SettingsManager.EnglishLanguageCode
+            : SettingsManager.ChineseLanguageCode;
+        StartCoroutine(ChangeLanguage(languageCode));
+    }
+
+    private IEnumerator ChangeLanguage(string languageCode)
+    {
+        if (_isChangingLanguage) yield break;
+
+        _isChangingLanguage = true;
+        _panel.SetLanguageDropdownInteractable(false);
+
+        bool changed = false;
+        yield return DataManager.Instance.SetLocaleAsync(
+            languageCode,
+            success => changed = success);
+
+        if (changed)
+        {
+            SettingsManager.Instance.SetLanguageCode(languageCode);
+        }
+
+        yield return RefreshLanguageOptions();
+        if (_panel != null)
+        {
+            _panel.SetLanguageDropdownInteractable(true);
+        }
+        _isChangingLanguage = false;
+    }
+
+    private IEnumerator RefreshLanguageOptions()
+    {
+        string chineseLabel = ChineseLanguageLabelKey;
+        string englishLabel = EnglishLanguageLabelKey;
+        yield return DataManager.Instance.GetLocalizedUiTextAsync(
+            ChineseLanguageLabelKey,
+            value => chineseLabel = value);
+        yield return DataManager.Instance.GetLocalizedUiTextAsync(
+            EnglishLanguageLabelKey,
+            value => englishLabel = value);
+
+        if (_panel != null)
+        {
+            _panel.SetLanguageOptions(
+                chineseLabel,
+                englishLabel,
+                SettingsManager.Instance.LanguageCode);
+        }
     }
 
     private void HandleBackClick()
