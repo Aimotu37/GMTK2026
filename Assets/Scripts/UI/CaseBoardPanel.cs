@@ -74,6 +74,12 @@ public class CaseBoardPanel : BasePanel
         FindComponent<Button>(TruthButtonName).interactable = interactable;
     }
 
+    public RectTransform GetSettingButtonRectTransform()
+    {
+        Button settingButton = FindComponent<Button>(SettingButtonName);
+        return settingButton != null ? settingButton.transform as RectTransform : null;
+    }
+
 
     private IEnumerator RefreshLayoutNextFrame()
     {

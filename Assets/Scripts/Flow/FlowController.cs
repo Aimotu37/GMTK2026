@@ -30,6 +30,7 @@ public class FlowController : SingletonMono<FlowController>
     private float demonSpeakInterval = 10.0f;
     private string _pendingClueText;
     private Coroutine demonSpeak;
+    private bool _explorationInitialized;
 
     public GameFlowState CurrentState => _currentState;
 
@@ -85,6 +86,7 @@ public class FlowController : SingletonMono<FlowController>
         _currentState = GameFlowState.Initiating;
         _pendingClueText = "";
         _currentCase = 0;
+        _explorationInitialized = false;
         if (demonSpeak != null)
             StopCoroutine(demonSpeak);
         demonSpeak = null;
@@ -95,6 +97,7 @@ public class FlowController : SingletonMono<FlowController>
         // 可选：退出当前状态的清理
 
         _currentState = newState;
+        RefreshGameplayInput();
         switch (newState)
         {
             case GameFlowState.Initiating:
@@ -217,21 +220,41 @@ public class FlowController : SingletonMono<FlowController>
 
     private IEnumerator HandleExplore()
     {
-        GameManager.Instance.DemonSpeak();
-        demonSpeak = StartCoroutine(DemonSpeakPeriodically());
+        bool tutorialPending = GameManager.Instance.ShouldRunCase1001Tutorial;
+        if (tutorialPending && InputManager.Instance != null)
+        {
+            InputManager.Instance.SetInputEnabled(false);
+        }
 
-        CaseConfig caseConfig = GameManager.Instance.CurrentCaseConfig;
-        string caseName = caseConfig.NameKey;
-        yield return DataManager.Instance.GetLocalizedTextAsync(
-            caseConfig.NameKey,
-            value => caseName = value);
-        UIManager.Instance.GetPanel<CaseBoardPanel>("case_board_panel").SetCaseName(caseName);
+        if (!_explorationInitialized)
+        {
+            _explorationInitialized = true;
+
+            CaseConfig caseConfig = GameManager.Instance.CurrentCaseConfig;
+            string caseName = caseConfig.NameKey;
+            yield return DataManager.Instance.GetLocalizedTextAsync(
+                caseConfig.NameKey,
+                value => caseName = value);
+            UIManager.Instance.GetPanel<CaseBoardPanel>("case_board_panel").SetCaseName(caseName);
+        }
+
+        if (tutorialPending)
+        {
+            EventManager.Instance.EventTrigger(
+                GameEvents.ExplorationReady,
+                GameManager.Instance.CurrentCaseId);
+            yield break;
+        }
+
+        if (demonSpeak == null)
+        {
+            GameManager.Instance.DemonSpeak();
+            demonSpeak = StartCoroutine(DemonSpeakPeriodically());
+        }
     }
 
     private IEnumerator HandleCluePopup()
     {
-        InputManager.Instance.SetInputEnabled(false);
-
         bool requestCompleted = false;
         bool panelOpened = false;
         BasePanel tempPanel = null;
@@ -265,7 +288,7 @@ public class FlowController : SingletonMono<FlowController>
             EventManager.Instance.EventTrigger(GameEvents.CheckCaseClues, GameManager.Instance.GotCaseItemIds.Count > 0);
             UIManager.Instance.HidePanel("clue_panel");
         }
-        InputManager.Instance.SetInputEnabled(true);
+        FlowStateChange(GameFlowState.Exploring);
 
         // 线索弹窗完全播完、玩家能重新操作之后，才决定这次要不要触发诅咒，跟线索信息错开成两拍
         yield return new WaitForSeconds(0.3f);
@@ -337,14 +360,12 @@ public class FlowController : SingletonMono<FlowController>
         yield break;
     }
 
-    private void ShowClueAnimation(string clue)
+    public void RefreshGameplayInput()
     {
-        InputManager.Instance.SetInputEnabled(false);
-
-        InteractionController.Instance.typewriter.StartTyping(clue, () =>
+        if (InputManager.Instance != null)
         {
-            InputManager.Instance.SetInputEnabled(true);
-        });
+            InputManager.Instance.SetInputEnabled(_currentState == GameFlowState.Exploring);
+        }
     }
 
     private IEnumerator DemonSpeakPeriodically()

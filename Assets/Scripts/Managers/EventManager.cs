@@ -47,6 +47,10 @@ class GameEvents
     public const string CaseSucceed = "OnCaseScucced";
     //恶魔自主发言事件
     public const string DemonSpeak = "OnDemonSpeak";
+    //案件进入可探索状态
+    public const string ExplorationReady = "OnExplorationReady";
+    //物品被发声槽成功接收
+    public const string ItemAccepted = "OnItemAccepted";
     //诅咒效果事件
     public const string DebuffEffect = "OnDebuffEffect";
     //案件真相展示
@@ -125,17 +129,33 @@ public class EventManager : Singleton<EventManager>
     /// <param name="action">需要添加的事件</param>
     public void EventUnregister<T>(string eventName, UnityAction<T> action)
     {
-        if (eventDictionary.ContainsKey(eventName))
+        if (!eventDictionary.TryGetValue(eventName, out IEventInfo eventInfo) ||
+            !(eventInfo is EventInfo<T> typedEvent))
         {
-            (eventDictionary[eventName] as EventInfo<T>).eventAction -= action;
+            return;
+        }
+
+        typedEvent.eventAction -= action;
+
+        if (typedEvent.eventAction == null)
+        {
+            eventDictionary.Remove(eventName);
         }
     }
 
     public void EventUnregister(string eventName, UnityAction action)
     {
-        if (eventDictionary.ContainsKey(eventName))
+        if (!eventDictionary.TryGetValue(eventName, out IEventInfo eventInfo) ||
+            !(eventInfo is EventInfo typedEvent))
         {
-            (eventDictionary[eventName] as EventInfo).eventAction -= action;
+            return;
+        }
+
+        typedEvent.eventAction -= action;
+
+        if (typedEvent.eventAction == null)
+        {
+            eventDictionary.Remove(eventName);
         }
     }
     /// <summary>

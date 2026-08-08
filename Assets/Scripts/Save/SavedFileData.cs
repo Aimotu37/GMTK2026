@@ -25,4 +25,5 @@ public sealed class GameProgressSavedData : ISavedData
 {
     public int currentCaseId;
     public bool gameCompleted;
+    public bool case1001TutorialCompleted;
 }

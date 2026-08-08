@@ -5,6 +5,7 @@ using UnityEngine;
 public class InputManager : SingletonMono<InputManager>
 {
     private bool _isInputEnabled = true;
+    public bool IsInputEnabled => _isInputEnabled;
 
     private bool _isInitialized;
     public bool IsInitialized => _isInitialized;

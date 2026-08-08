@@ -31,6 +31,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
     private int _currentCaseIndex;
     private int _iscurrentCasePassed;
     private bool _gameCompleted;
+    private bool _case1001TutorialCompleted;
 
     //运行时不保存变量
     //对话次数
@@ -44,8 +45,12 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
     public GameState CurrentState => _currentState;
     public List<int> GotCaseItemIds => _gotCaseItemIds;
     public CaseConfig CurrentCaseConfig => _currentCaseConfig;
+    public int CurrentWords => _currentWords;
     public int LatestItemId => latestItemId;
     public int CurrentCaseIndex => _currentCaseIndex;
+    public int CurrentCaseId => _currentCaseId;
+    public bool ShouldRunCase1001Tutorial =>
+        _currentCaseId == 1001 && !_case1001TutorialCompleted;
 
     //单局游戏变量
     private CaseConfig _currentCaseConfig;
@@ -200,21 +205,10 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         // 如果没有快照则退回到场景重载作为兜底
         if (!_sceneSnapshots.TryGetValue(active.name, out var snapshotRoot) || snapshotRoot == null)
         {
-            _gotCaseItemIds.Clear();
-            if (InputManager.Instance != null) InputManager.Instance.SetInputEnabled(false);
-            if (interaction == null) interaction = InteractionController.Instance;
-            interaction?.ResetController();
-
             Debug.LogWarning($"RetryCurrentCase: 场景 {active.name} 没有快照，使用场景重载作为回退。");
-            ScenesManager.Instance?.LoadSceneAsync(active.name, () =>
-            {
-                speakerZone = FindAnyObjectByType<SpeakerZone>();
-                interaction = InteractionController.Instance;
-                interaction?.SetSpeakerZone(speakerZone);
-                flow = FlowController.Instance;
-                _currentWords = GetCurrentCaseInitialWords();
-            });
-            return false;
+            if (!TryBeginSceneTransition()) return true;
+            StartCoroutine(ReloadCurrentCaseRoutine());
+            return true;
         }
 
         if (!TryBeginSceneTransition()) return true;
@@ -266,7 +260,60 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         EndSceneTransition();
         flow.FlowInit(playIntroStory: false);
         SwitchGameState(GameState.Playing);
-        if (InputManager.Instance != null) InputManager.Instance.SetInputEnabled(true);
+    }
+
+    private IEnumerator ReloadCurrentCaseRoutine()
+    {
+        ScreenFader fader = null;
+        yield return GetOrLoadScreenFader(value => fader = value);
+        if (fader == null)
+        {
+            Debug.LogError("RetryCurrentCase failed to load the screen fader.");
+            EndSceneTransition();
+            yield break;
+        }
+
+        yield return fader.FadeOut(0.5f);
+        UIManager.Instance.HidePanel("death_panel");
+
+        _gotCaseItemIds.Clear();
+        if (InputManager.Instance != null) InputManager.Instance.SetInputEnabled(false);
+        if (interaction == null) interaction = InteractionController.Instance;
+        interaction?.ResetController();
+
+        bool reloadCompleted = false;
+        bool reloadSucceeded = false;
+        ScenesManager.Instance.ReloadCurrentGameScene(success =>
+        {
+            reloadSucceeded = success;
+            reloadCompleted = true;
+        });
+        yield return new WaitUntil(() => reloadCompleted);
+
+        if (!reloadSucceeded)
+        {
+            Debug.LogError("RetryCurrentCase failed to reload the current case scene.");
+            RecoverToMainMenuWhileBlack();
+            yield break;
+        }
+
+        speakerZone = FindAnyObjectByType<SpeakerZone>();
+        interaction = InteractionController.Instance;
+        flow = FlowController.Instance;
+        if (speakerZone == null || interaction == null || flow == null)
+        {
+            Debug.LogError("Reloaded case scene is missing required gameplay objects.");
+            RecoverToMainMenuWhileBlack();
+            yield break;
+        }
+
+        interaction.SetSpeakerZone(speakerZone);
+        _currentWords = GetCurrentCaseInitialWords();
+        EventManager.Instance.EventTrigger(GameEvents.CountChanged, _currentWords);
+        EndSceneTransition();
+        flow.FlowInit(playIntroStory: false);
+        CaptureSceneSnapshot();
+        SwitchGameState(GameState.Playing);
     }
     //是否最后一案判断
     public bool IsLastCase()
@@ -352,11 +399,15 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
     {
         if (_currentState == GameState.Playing)
         {
+            if (InputManager.Instance != null)
+                InputManager.Instance.SetInputEnabled(false);
             SwitchGameState(GameState.Pause);
         }
         else if (_currentState == GameState.Pause)
         {
             SwitchGameState(GameState.Playing);
+            if (flow == null) flow = FlowController.Instance;
+            flow?.RefreshGameplayInput();
         }
     }
 
@@ -400,6 +451,8 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
     internal void LoadMainMenuImmediately(Action<bool> onLoaded)
     {
         Time.timeScale = 1f;
+        if (InputManager.Instance != null)
+            InputManager.Instance.SetInputEnabled(false);
         ClearSceneSnapshots();
         SwitchGameState(GameState.MainMenu);
         ScenesManager.Instance.SwitchGameScene(Scenes.MainMenuSceneName, sceneLoaded =>
@@ -577,6 +630,8 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         }
         else
         {
+            if (InputManager.Instance != null)
+                InputManager.Instance.SetInputEnabled(false);
             StartCoroutine(ShowLocalizedClue(itemId));
         }
     }
@@ -586,6 +641,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         if (!_items.TryGetValue(itemId, out ItemsConfig item))
         {
             Debug.LogError($"Item config {itemId} does not exist.");
+            flow.RefreshGameplayInput();
             yield break;
         }
 
@@ -1059,6 +1115,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         _currentCaseId = allCaseIds[_currentCaseIndex];
         _currentWords = DEFAULT_WORDS;
         _gameCompleted = false;
+        _case1001TutorialCompleted = false;
         latestItemId = 0;
         _currentDebuffId = 0;
 
@@ -1147,8 +1204,20 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         return new GameProgressSavedData
         {
             currentCaseId = _currentCaseId,
-            gameCompleted = _gameCompleted
+            gameCompleted = _gameCompleted,
+            case1001TutorialCompleted = _case1001TutorialCompleted
         };
+    }
+
+    public void CompleteCase1001Tutorial()
+    {
+        if (_case1001TutorialCompleted)
+        {
+            return;
+        }
+
+        _case1001TutorialCompleted = true;
+        SaveManager.Instance.SaveGameData();
     }
 
     public void LoadData(ISavedData data)
@@ -1172,6 +1241,7 @@ public class GameManager : SingletonMono<GameManager>, ISaveable
         _currentCaseIndex = caseIndex;
         _currentWords = DEFAULT_WORDS;
         _gameCompleted = gameData.gameCompleted;
+        _case1001TutorialCompleted = gameData.case1001TutorialCompleted;
         latestItemId = 0;
         _currentDebuffId = 0;
         _items.Clear();

@@ -95,6 +95,10 @@ MonoBehaviour:
     m_Key: clue.locked
     m_Metadata:
       m_Items: []
+  - m_Id: 1762643125215232
+    m_Key: settings.language.languagetext
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

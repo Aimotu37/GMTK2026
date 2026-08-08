@@ -1,10 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 public class InteractionController : SingletonMono<InteractionController>
 {
@@ -66,10 +62,6 @@ public class InteractionController : SingletonMono<InteractionController>
         EventSystem eventSystem = EventSystem.current;
         if (eventSystem != null && eventSystem.IsPointerOverGameObject())
         {
-            if (InputManager.Instance.GetMouseDown(0) && !IsPointerOverButton(eventSystem))
-            {
-                UIEmptyClick();
-            }
             return;  // ← UI 上的点击，直接结束，不处理游戏对象
         }
 
@@ -79,26 +71,6 @@ public class InteractionController : SingletonMono<InteractionController>
         }
     }
 
-    private bool IsPointerOverButton(EventSystem eventSystem)
-    {
-        PointerEventData pointerData = new PointerEventData(eventSystem)
-        {
-            position = InputManager.Instance.GetMousePosition()
-        };
-        List<RaycastResult> raycastResults = new List<RaycastResult>();
-        eventSystem.RaycastAll(pointerData, raycastResults);
-
-        foreach (RaycastResult result in raycastResults)
-        {
-            if (result.gameObject != null && result.gameObject.GetComponentInParent<Button>() != null)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     //初始化发声槽
     public void SetSpeakerZone(SpeakerZone zone)
     {
@@ -106,6 +78,15 @@ public class InteractionController : SingletonMono<InteractionController>
         speakerZoneTransform = zone.speakerZoneTransform;
         speakerZoneCollider = zone.speakerZoneCollider;
         speakerZoneLayerMask = zone.speakerZoneLayerMask;
+
+        GameManager gameManager = GameManager.Instance;
+        CaseConfig caseConfig = gameManager.CurrentCaseConfig;
+        if (caseConfig != null)
+        {
+            zone.InitializeProgress(
+                caseConfig.InitialWords,
+                gameManager.CurrentWords);
+        }
     }
 
     public void SetDragBounds(Collider2D boundsCollider)
@@ -129,27 +110,6 @@ public class InteractionController : SingletonMono<InteractionController>
                 isDragging = true;
                 offset = currentItem.transform.position - mousePos;
                 currentItem.OnDragStart(mousePos);
-            }
-        }
-    }
-
-    public void UIEmptyClick()
-    {
-        if (FlowController.Instance.IsWaitForClickEmpty)
-        {
-            if (FlowController.Instance.CurrentState == GameFlowState.Success)
-            {
-                AudioManager.Instance.StartPlaySound("sfx_10_12", false);
-                FlowController.Instance.ShowCaseTruth();
-            }
-            else if (FlowController.Instance.CurrentState == GameFlowState.CaseFail)
-            {
-                AudioManager.Instance.StartPlaySound("sfx_13", false);
-                bool retryOwnsPanelDismissal = GameManager.Instance.RetryCurrentCase();
-                if (!retryOwnsPanelDismissal)
-                {
-                    UIManager.Instance.HidePanel("death_panel");
-                }
             }
         }
     }
@@ -232,9 +192,11 @@ public class InteractionController : SingletonMono<InteractionController>
     public void AcceptCurrentDrop()
     {
         if (currentItem == null) return;
+        int acceptedItemId = currentItem.ItemID;
         AudioManager.Instance.StartPlaySound("sfx_04_05_06", false);
         currentItem.OnDragEnd(true);
         speakerZone?.PlayAcceptedDropFeedback();
+        EventManager.Instance.EventTrigger(GameEvents.ItemAccepted, acceptedItemId);
         currentItem = null;
         isDragging = false;
     }

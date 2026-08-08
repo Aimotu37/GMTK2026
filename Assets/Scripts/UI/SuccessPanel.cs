@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using TMPro;
+using UnityEngine.EventSystems;
 
-public class SuccessPanel : BasePanel
+public class SuccessPanel : BasePanel, IPointerClickHandler
 {
     private const string NextCaseButtonName = "NextCaseButton";
 
     public event Action NextCaseClicked;
+    public event Action BackgroundClicked;
 
     [SerializeField]
     private GameObject truthBg;
@@ -26,6 +28,14 @@ public class SuccessPanel : BasePanel
             case NextCaseButtonName:
                 NextCaseClicked?.Invoke();
                 break;
+        }
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (IsOpen)
+        {
+            BackgroundClicked?.Invoke();
         }
     }
 

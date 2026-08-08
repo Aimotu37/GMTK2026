@@ -78,6 +78,27 @@ public class ScenesManager : SingletonMono<ScenesManager>
     }
 
     /// <summary>
+    /// 强制卸载并重新加载当前内容场景，用于没有场景快照时重试当前案件。
+    /// </summary>
+    public void ReloadCurrentGameScene(UnityAction<bool> callback = null)
+    {
+        if (_isSwitching)
+        {
+            callback?.Invoke(false);
+            return;
+        }
+
+        if (!IsValidGameScene(_currentGameSceneName))
+        {
+            Debug.LogError($"Invalid current content scene: {_currentGameSceneName}");
+            callback?.Invoke(false);
+            return;
+        }
+
+        StartCoroutine(SwitchGameSceneCoroutine(_currentGameSceneName, callback, true));
+    }
+
+    /// <summary>
     /// 场景转换
     /// </summary>
     public void SwitchScene(string toScene, UnityAction action)
@@ -105,12 +126,15 @@ public class ScenesManager : SingletonMono<ScenesManager>
     }
 
 
-    private IEnumerator SwitchGameSceneCoroutine(string targetSceneName, UnityAction<bool> callback)
+    private IEnumerator SwitchGameSceneCoroutine(
+        string targetSceneName,
+        UnityAction<bool> callback,
+        bool forceReload = false)
     {
         _isSwitching = true;
 
         //目标场景与当前场景是同一个场景
-        if (_currentGameSceneName == targetSceneName)
+        if (!forceReload && _currentGameSceneName == targetSceneName)
         {
             Scene currentScene = SceneManager.GetSceneByName(targetSceneName);
             if (currentScene.IsValid() && currentScene.isLoaded)

@@ -23,7 +23,8 @@ public class DeathPanelPresenter : MonoBehaviour
         }
 
         _panel.BackToMainClicked += HandleBackToMain;
-        _panel.RetryClicked += HandleTetry;
+        _panel.RetryClicked += HandleRetry;
+        _panel.BackgroundClicked += HandleRetry;
     }
 
     private void OnDestroy()
@@ -31,7 +32,8 @@ public class DeathPanelPresenter : MonoBehaviour
         if (_panel != null)
         {
             _panel.BackToMainClicked -= HandleBackToMain;
-            _panel.RetryClicked -= HandleTetry;
+            _panel.RetryClicked -= HandleRetry;
+            _panel.BackgroundClicked -= HandleRetry;
         }
     }
 
@@ -41,8 +43,9 @@ public class DeathPanelPresenter : MonoBehaviour
         UIManager.Instance.HidePanel(_panelName);
     }
 
-    private void HandleTetry()
+    private void HandleRetry()
     {
+        AudioManager.Instance.StartPlaySound("sfx_13", false);
         bool retryOwnsPanelDismissal = GameManager.Instance.RetryCurrentCase();
         if (!retryOwnsPanelDismissal)
         {

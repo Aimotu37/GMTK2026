@@ -24,6 +24,7 @@ public class SuccessPresenter : MonoBehaviour
         if (_panel != null)
         {
             _panel.NextCaseClicked -= HandleNextCase;
+            _panel.BackgroundClicked -= HandleNextCase;
         }
         EventManager.Instance.EventUnregister<string>(GameEvents.CaseTruthShow, ShowTruth);
     }
@@ -37,13 +38,13 @@ public class SuccessPresenter : MonoBehaviour
         }
 
         _panel.NextCaseClicked += HandleNextCase;
+        _panel.BackgroundClicked += HandleNextCase;
     }
 
     private void HandleNextCase()
     {
         AudioManager.Instance.StartPlaySound("sfx_10_12", false);
-        GameManager.Instance.NextCase();
-        UIManager.Instance.HidePanel(_panelName);
+        FlowController.Instance.ShowCaseTruth();
     }
 
     private void ShowTruth(string truthText)

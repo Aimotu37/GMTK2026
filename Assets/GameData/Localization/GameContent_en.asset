@@ -382,6 +382,10 @@ MonoBehaviour:
       it up\u2026"
     m_Metadata:
       m_Items: []
+  - m_Id: 65954811224133
+    m_Localized: Click and drag the highlighted item into the speaking slot to see what it reveals.
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

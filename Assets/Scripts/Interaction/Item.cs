@@ -11,6 +11,9 @@ public class Item : MonoBehaviour, IInteractive
     [SerializeField] private float dragScale = 1.1f;
     [SerializeField] private float snapDuration = 0.15f;
 
+    [Header("Highlight Visual")]
+    [SerializeField] private Sprite highlightSprite;
+
     // 实现接口属性
     public bool IsInteractable { get; private set; } = true;
     public bool IsDragging { get; set; } = false;
@@ -18,16 +21,23 @@ public class Item : MonoBehaviour, IInteractive
     // 内部组件缓存
     private Collider2D col2d;
     private SpriteRenderer spriteRenderer;
+    private Sprite originalSprite;
     private Vector3 startScale;
     private Vector3 startPosition;
     private int defaultSortingOrder;
+    private bool tutorialHighlighted;
+    private bool dropAccepted;
 
     private void Awake()
     {
         col2d = GetComponent<Collider2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         startScale = transform.localScale;
-        if (spriteRenderer != null) defaultSortingOrder = spriteRenderer.sortingOrder;
+        if (spriteRenderer != null)
+        {
+            originalSprite = spriteRenderer.sprite;
+            defaultSortingOrder = spriteRenderer.sortingOrder;
+        }
     }
 
     public void OnDragStart(Vector3 mouseWorldPos)
@@ -36,6 +46,7 @@ public class Item : MonoBehaviour, IInteractive
 
         IsDragging = true;
         startPosition = transform.position;
+        RefreshSprite();
 
         transform.localScale = startScale * dragScale;
         if (spriteRenderer != null) spriteRenderer.sortingOrder = 100;
@@ -52,6 +63,8 @@ public class Item : MonoBehaviour, IInteractive
     public void OnDragEnd(bool isAccepted)
     {
         IsDragging = false;
+        dropAccepted = isAccepted;
+        RefreshSprite();
         if (isAccepted)
         {
             StartCoroutine(SnapAndDestroy(InteractionController.Instance.SpeakerZonePosition));
@@ -63,6 +76,12 @@ public class Item : MonoBehaviour, IInteractive
     }
 
     public Collider2D GetCollider() => col2d;
+
+    public void SetTutorialHighlighted(bool highlighted)
+    {
+        tutorialHighlighted = highlighted;
+        RefreshSprite();
+    }
 
     private IEnumerator SnapAndDestroy(Vector3 target)
     {
@@ -107,5 +126,18 @@ public class Item : MonoBehaviour, IInteractive
     {
         IsInteractable = value;
         col2d.enabled = value;
+    }
+
+    private void RefreshSprite()
+    {
+        if (spriteRenderer == null)
+        {
+            return;
+        }
+
+        bool shouldHighlight = tutorialHighlighted || IsDragging || dropAccepted;
+        spriteRenderer.sprite = shouldHighlight && highlightSprite != null
+            ? highlightSprite
+            : originalSprite;
     }
 }

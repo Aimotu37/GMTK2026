@@ -9,12 +9,10 @@ public class TypewriterEffect : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textComponent;
 
     [Header("打字机参数")]
-    [SerializeField] private float normalSpeed = 0.2f;      // 正常打字间隔（秒）
-    [SerializeField] private float punctuationSpeed = 0.3f;  // 遇到标点符号时的停顿（秒），制造节奏感
+    private float normalSpeed = 0.15f;      // 正常打字间隔（秒）
+    private float englishCharacterSpeed = 0.08f;
+    private float punctuationSpeed = 0.3f;  // 遇到标点符号时的停顿（秒），制造节奏感
     [SerializeField] private bool autoStart = false;         // 是否自动开始（一般手动调用）
-
-    [Header("打字过程中的输入控制")]
-    [SerializeField] private bool lockInputWhileTyping = true; // 打字时是否锁住玩家拖拽
 
     // 私有状态
     private string fullText;
@@ -27,14 +25,20 @@ public class TypewriterEffect : MonoBehaviour
     /// </summary>
     /// <param name="text">要打印的文本</param>
     /// <param name="onComplete">打印完成时的回调</param>
-    public void StartTyping(string text, Action onComplete = null)
+    /// <param name="showImmediately">是否跳过打字过程并直接显示全文</param>
+    public void StartTyping(
+        string text,
+        Action onComplete = null,
+        bool showImmediately = false)
     {
         // 如果正在打字，强制停止之前的
-        if (isTyping && typingCoroutine != null)
+        if (typingCoroutine != null)
         {
             StopCoroutine(typingCoroutine);
-            isTyping = false;
         }
+
+        typingCoroutine = null;
+        isTyping = false;
 
         fullText = text;
         onCompleteCallback = onComplete;
@@ -43,6 +47,13 @@ public class TypewriterEffect : MonoBehaviour
         if (string.IsNullOrEmpty(fullText))
         {
             textComponent.text = "";
+            onCompleteCallback?.Invoke();
+            return;
+        }
+
+        if (showImmediately)
+        {
+            textComponent.text = fullText;
             onCompleteCallback?.Invoke();
             return;
         }
@@ -65,10 +76,6 @@ public class TypewriterEffect : MonoBehaviour
             if (textComponent != null)
                 textComponent.text = fullText;
 
-            // 解锁输入
-            if (lockInputWhileTyping && InteractionController.Instance != null)
-                InputManager.Instance.SetInputEnabled(true);
-
             // 执行回调
             onCompleteCallback?.Invoke();
         }
@@ -82,11 +89,6 @@ public class TypewriterEffect : MonoBehaviour
     private IEnumerator TypewriterRoutine()
     {
         isTyping = true;
-
-        if (lockInputWhileTyping && InteractionController.Instance != null)
-        {
-            //InputManager.Instance.SetInputEnabled(false);
-        }
 
         textComponent.text = "";
         int totalChars = fullText.Length;
@@ -102,23 +104,12 @@ public class TypewriterEffect : MonoBehaviour
             // TODO:必要：播放打字音效
             //AudioManager.Instance.StartPlaySound("testSound", false);
 
-            float waitTime = normalSpeed;
-            if (c == '。' || c == '！' || c == '？' || c == '.' || c == '!' || c == '?' || c == '，' || c == ',')
-            {
-                waitTime = punctuationSpeed;
-            }
-
-            yield return new WaitForSeconds(waitTime);
+            yield return new WaitForSeconds(GetCharacterWaitTime(c));
         }
 
         // 打字结束
         isTyping = false;
         typingCoroutine = null;
-
-        if (lockInputWhileTyping && InteractionController.Instance != null)
-        {
-            //InputManager.Instance.SetInputEnabled(true);
-        }
 
         // 执行回调（比如弹出下一句或关闭对话框）
         onCompleteCallback?.Invoke();
@@ -133,8 +124,6 @@ public class TypewriterEffect : MonoBehaviour
         {
             StopCoroutine(typingCoroutine);
             isTyping = false;
-            if (lockInputWhileTyping && InteractionController.Instance != null)
-                InputManager.Instance.SetInputEnabled(true);
         }
         textComponent.text = string.Empty;
         fullText = string.Empty;
@@ -144,4 +133,62 @@ public class TypewriterEffect : MonoBehaviour
     /// 判断是否正在打字
     /// </summary>
     public bool IsTyping => isTyping;
+
+    private float GetCharacterWaitTime(char character)
+    {
+        if (IsPausePunctuation(character))
+        {
+            return punctuationSpeed;
+        }
+
+        if (IsLatinCharacter(character) ||
+            char.IsDigit(character) ||
+            char.IsWhiteSpace(character) ||
+            IsEnglishInlinePunctuation(character))
+        {
+            return englishCharacterSpeed;
+        }
+
+        return normalSpeed;
+    }
+
+    private static bool IsLatinCharacter(char character)
+    {
+        return character >= 'A' && character <= 'Z' ||
+               character >= 'a' && character <= 'z' ||
+               character >= '\u00C0' && character <= '\u024F';
+    }
+
+    private static bool IsEnglishInlinePunctuation(char character)
+    {
+        return character == '\'' ||
+               character == '\u2019' ||
+               character == '"' ||
+               character == '\u201C' ||
+               character == '\u201D';
+    }
+
+    private static bool IsPausePunctuation(char character)
+    {
+        switch (character)
+        {
+            case '.':
+            case ',':
+            case '!':
+            case '?':
+            case ';':
+            case ':':
+            case '\u3002':
+            case '\uFF0C':
+            case '\uFF01':
+            case '\uFF1F':
+            case '\uFF1B':
+            case '\uFF1A':
+            case '\u2026':
+            case '\u2014':
+                return true;
+            default:
+                return false;
+        }
+    }
 }

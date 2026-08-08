@@ -307,6 +307,10 @@ MonoBehaviour:
     m_Key: debuff.0.description
     m_Metadata:
       m_Items: []
+  - m_Id: 65954811224133
+    m_Key: case.1001.tutorial.drag_item_101
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

@@ -903,6 +903,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   textComponent: {fileID: 0}
   normalSpeed: 0.2
+  englishCharacterSpeed: 0.04
   punctuationSpeed: 0.3
   autoStart: 0
   lockInputWhileTyping: 1

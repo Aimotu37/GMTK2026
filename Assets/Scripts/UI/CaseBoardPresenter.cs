@@ -76,7 +76,7 @@ public class CaseBoradPresenter : MonoBehaviour
 
     private void HandleSettingClicked()
     {
-        UIManager.Instance.ShowPanel<SettingPanel>("main_setting_panel");
+        UIManager.Instance.ShowPanel<SettingPanel>("main_setting_panel", E_UILayer.SystemLayer);
     }
 
     private void HandleTruthClick()
